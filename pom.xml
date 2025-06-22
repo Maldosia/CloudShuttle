@@ -5,8 +5,7 @@
   <groupId>com.maldosia</groupId>
   <artifactId>cloudshuttle</artifactId>
   <version>1.0-SNAPSHOT</version>
-  <packaging>pom</packaging>
-
+  
   <name>CloudShuttle</name>
   <url>http://maven.apache.org</url>
 
