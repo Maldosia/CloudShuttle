@@ -17,9 +17,9 @@ public class Connection {
 
     private static final Logger log = LoggerFactory.getLogger(Connection.class);
     
-    private String key;
+    private final String key;
     
-    private String poolKey;
+    private final String poolKey;
     
     private final Channel channel;
     

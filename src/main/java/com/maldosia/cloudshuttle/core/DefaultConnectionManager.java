@@ -23,32 +23,25 @@ public class DefaultConnectionManager implements ConnectionManager {
     }
 
     @Override
-    public Connection create(Url url) {
+    public Connection getAndCreateIfAbsent(Url url) {
+        return this.getAndCreateIfAbsent(url, "default-pool-key");
+    }
+
+    @Override
+    public Connection getAndCreateIfAbsent(Url url, String poolKey) {
         try {
-            return this.connectionFactory.createConnection(url);
+            ConnectionPool connectionPool = this.connectionPools.computeIfAbsent(poolKey, k -> new ConnectionPool());
+            Connection connection;
+            if (connectionPool.get() == null) {
+                connection = this.connectionFactory.createConnection(url);
+                connectionPool.add(connection);
+            } else {
+                connection = connectionPool.get();
+            }
+            return connection;
         } catch (Exception e) {
             throw new ConnectionException("Create connection failed. The address is " + url.getRemoteUrl(), e);
         }
-    }
-
-    @Override
-    public Connection create(Url url, int connectTimeout) {
-        try {
-            return this.connectionFactory.createConnection(url, connectTimeout);
-        } catch (Exception e) {
-            throw new ConnectionException("Create connection failed. The address is " + url.getRemoteUrl(), e);
-        }
-    }
-
-    @Override
-    public void add(Connection connection) {
-        this.add(connection, connection.getPoolKey());
-    }
-
-    @Override
-    public void add(Connection connection, String poolKey) {
-        ConnectionPool connectionPool = this.connectionPools.computeIfAbsent(connection.getPoolKey(), k -> new ConnectionPool());
-        connectionPool.add(connection);
     }
 
     @Override

@@ -7,14 +7,14 @@ import java.util.List;
  * @since 2025/6/22
  */
 public interface ConnectionManager {
-    
-    Connection create(Url url);
-    
-    Connection create(Url url, int connectTimeout);
-    
-    void add(Connection connection);
-    
-    void add(Connection connection, String poolKey);
+
+
+
+
+
+    Connection getAndCreateIfAbsent(Url url);
+
+    Connection getAndCreateIfAbsent(Url url, String poolKey);
 
     Connection get(String poolKey);
 

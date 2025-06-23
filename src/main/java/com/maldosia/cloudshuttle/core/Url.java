@@ -6,13 +6,13 @@ package com.maldosia.cloudshuttle.core;
  */
 public class Url {
 
-    private String id;
+    private final String id;
 
-    private String remoteIp;
+    private final String remoteIp;
     
-    private int remotePort;
+    private final int remotePort;
     
-    private String remoteUrl;
+    private final String remoteUrl;
 
     public Url(String remoteIp, int remotePort) {
         this.remoteIp = remoteIp;

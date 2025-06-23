@@ -6,18 +6,18 @@ import org.slf4j.LoggerFactory;
 
 /**
  * TCP 客户端
- * 
+ *
  * @author Maldosia
  * @since 2025/6/22
  */
-public class TcpClient extends AbstractClient {
+public class TcpClient extends AbstractClient implements CloudShuttleClient {
 
     private static final Logger log = LoggerFactory.getLogger(TcpClient.class);
-    
+
     private ConnectionManager connectionManager;
-    
+
     public TcpClient() {
-        
+
     }
 
     @Override
@@ -32,13 +32,4 @@ public class TcpClient extends AbstractClient {
         super.shutdown();
     }
 
-    @Override
-    public void sendSync() {
-        
-    }
-
-    @Override
-    public void sendAsync() {
-
-    }
 }

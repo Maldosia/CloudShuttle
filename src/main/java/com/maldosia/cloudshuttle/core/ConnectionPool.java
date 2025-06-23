@@ -10,7 +10,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
  */
 public class ConnectionPool {
 
-    private CopyOnWriteArrayList<Connection> connections;
+    private final CopyOnWriteArrayList<Connection> connections;
 
     public ConnectionPool() {
         this.connections = new CopyOnWriteArrayList<Connection>();
@@ -54,15 +54,11 @@ public class ConnectionPool {
     }
 
     public Connection get() {
-        if (null != connections) {
-            // TODO 使用选择策略
-            return connections.get(0);
-        } else {
-            return null;
-        }
+        // TODO 使用选择策略
+        return connections.get(0);
     }
 
     public List<Connection> getAll() {
-        return new ArrayList<Connection>(connections);
+        return new ArrayList<>(connections);
     }
 }
