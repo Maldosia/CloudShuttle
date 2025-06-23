@@ -6,16 +6,15 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 基础配置容器实现
- * 
+ *
  * @author Maldosia
  * @since 2025/6/22
  */
-public class BaseOptions implements OptionContainer{
+public class BaseOptions {
 
     private final Map<Option<?>, Object> options = new ConcurrentHashMap<>();
-    
-    @Override
-    public <T> void setOption(Option<T> key, T value) {
+
+    public <T> void option(Option<T> key, T value) {
         // 类型检查
         if (!key.type().isInstance(value)) {
             throw new IllegalArgumentException(
@@ -32,9 +31,8 @@ public class BaseOptions implements OptionContainer{
         options.put(key, value);
     }
 
-    @Override
     @SuppressWarnings("unchecked")
-    public <T> T getOption(Option<T> key) {
+    public <T> T option(Option<T> key) {
         return (T) options.get(key);
     }
 

@@ -11,4 +11,14 @@ public abstract class AbstractClient extends AbstractLifeCycle implements CloudS
     public AbstractClient() {
         this.options = new BaseOptions();
     }
+
+    @Override
+    public <T> void option(Option<T> key, T value) {
+
+    }
+
+    @Override
+    public <T> T option(Option<T> key) {
+        return null;
+    }
 }

@@ -17,7 +17,7 @@ public class NetworkOptions {
     
     public static final Option<Integer> CONNECTION_TIMEOUT =
             new Option.Builder<>("connectionTimeout", Integer.class)
-                    .defaultValue(5000) // 默认5秒
+                    .defaultValue(2000) // 默认2秒
                     .validator(value -> {
                         if (value <= 0) {
                             throw new IllegalArgumentException("Connection timeout must be positive");
@@ -27,7 +27,7 @@ public class NetworkOptions {
 
     public static final Option<Integer> MAX_CONNECTIONS =
             new Option.Builder<>("maxConnections", Integer.class)
-                    .defaultValue(1000)
+                    .defaultValue(10)
                     .validator(value -> {
                         if (value <= 0) {
                             throw new IllegalArgumentException("Max connections must be positive");

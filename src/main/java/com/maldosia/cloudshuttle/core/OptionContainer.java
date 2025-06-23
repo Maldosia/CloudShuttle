@@ -11,18 +11,18 @@ public interface OptionContainer {
     /**
      * 设置配置项
      */
-    <T> void setOption(Option<T> key, T value);
+    <T> void option(Option<T> key, T value);
 
     /**
      * 获取配置项值
      */
-    <T> T getOption(Option<T> key);
+    <T> T option(Option<T> key);
 
     /**
      * 获取配置项值，如果未设置则返回默认值
      */
     default <T> T getOptionOrDefault(Option<T> key) {
-        T value = getOption(key);
+        T value = option(key);
         return value != null ? value : key.defaultValue();
     }
 }
