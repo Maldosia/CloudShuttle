@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.InetSocketAddress;
+import java.util.concurrent.TimeUnit;
 
 /**
  * TCP 客户端
@@ -31,6 +32,8 @@ public class TcpClient extends AbstractClient {
 
     private Channel channel;
 
+    private final ConnectionHandler connectionHandler = new ConnectionHandler(this);
+
     public TcpClient(Codec codec, ChannelHandler handler) {
         this.bootstrap = new Bootstrap();
         this.bootstrap.group(workerGroup).channel(NettyUtil.getClientSocketChannelClass());
@@ -47,7 +50,7 @@ public class TcpClient extends AbstractClient {
                 ChannelPipeline pipeline = socketChannel.pipeline();
                 pipeline.addLast("decoder", codec.newDecoder());
                 pipeline.addLast("encoder", codec.newEncoder());
-                pipeline.addLast("connectionHandler", new ConnectionHandler());
+                pipeline.addLast("connectionHandler", connectionHandler);
                 pipeline.addLast("handler", handler);
             }
         });
@@ -66,17 +69,17 @@ public class TcpClient extends AbstractClient {
     }
 
     @Override
-    public void connect(Url url) {
+    public ChannelFuture connect(Url url) {
         Integer connectionTimeout = option(NetworkOptions.CONNECTION_TIMEOUT);
 
-        this.connect(url, connectionTimeout);
+        return this.connect(url, connectionTimeout);
     }
 
     @Override
-    public void connect(Url url, int connectTimeout) {
+    public ChannelFuture connect(Url url, int connectTimeout) {
         this.url = url;
         bootstrap.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, connectTimeout);
-        ChannelFuture future = bootstrap.connect(new InetSocketAddress(url.getRemoteIp(), url.getRemotePort()));
+        ChannelFuture future = this.bootstrap.connect(new InetSocketAddress(url.getRemoteIp(), url.getRemotePort()));
 
         future.awaitUninterruptibly();
         if (!future.isDone()) {
@@ -92,13 +95,11 @@ public class TcpClient extends AbstractClient {
             throw new ConnectionException(errMsg, future.cause());
         }
 
-        Channel channel = future.channel();
+        this.channel = future.channel();
         if (channel.isActive()) {
-            log.info("channel.isActive()");
-            this.channel = channel;
-        } else {
-            throw new ConnectionException("create connection, but channel is inactive, url is " + url.getRemoteUrl());
+            log.info("create connection to {}", url.getRemoteUrl());
         }
+        return future;
     }
 
 
@@ -106,7 +107,7 @@ public class TcpClient extends AbstractClient {
     public void disconnect() {
         try {
             if (this.channel != null) {
-                this.channel.close().addListener((ChannelFutureListener) future -> log.info("Close the connection to remote address={}, result={}", url.getRemoteUrl(), future.isSuccess(), future.cause()));
+                this.channel.close().addListener((ChannelFutureListener) future -> log.info("Close the connection to remote address={}, result={}", getUrl().getRemoteUrl(), future.isSuccess(), future.cause()));
             }
         } catch (Exception e) {
             log.error("Exception caught when closing connection {}", url.getRemoteUrl(), e);
@@ -114,9 +115,19 @@ public class TcpClient extends AbstractClient {
     }
 
     @Override
-    public void reconnect(Url url) {
-        this.disconnect();
-        this.connect(url);
+    public void reconnect() {
+        if (this.channel != null && this.channel.isActive()) {
+            this.disconnect();
+            ChannelFuture future = this.connect(url);
+
+            if (future.isSuccess()) {
+                log.info("create connection to {} successfully", url.getRemoteUrl());
+            } else {
+                log.error("create connection to {} failed", url.getRemoteUrl());
+                Integer reconnectIntervals = this.option(NetworkOptions.RECONNECT_INTERVALS);
+                future.channel().eventLoop().schedule(this::reconnect, reconnectIntervals, TimeUnit.SECONDS);
+            }
+        }
     }
 
     @Override
@@ -125,7 +136,16 @@ public class TcpClient extends AbstractClient {
     }
 
     @Override
+    public void sendSync(Object message, int timeout) {
+
+    }
+
+    @Override
     public void sendAsync(Object message) {
 
+    }
+
+    public Url getUrl() {
+        return url;
     }
 }

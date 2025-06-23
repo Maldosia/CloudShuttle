@@ -16,7 +16,9 @@
  */
 package com.maldosia.cloudshuttle.core.handler;
 
+import com.maldosia.cloudshuttle.core.OptionContainer;
 import com.maldosia.cloudshuttle.core.TcpClient;
+import com.maldosia.cloudshuttle.core.options.NetworkOptions;
 import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
@@ -30,9 +32,11 @@ import java.net.SocketAddress;
 public class ConnectionHandler extends ChannelDuplexHandler {
 
     private static final Logger log = LoggerFactory.getLogger(TcpClient.class);
-    
-    public ConnectionHandler() {
 
+    private final TcpClient tcpClient;
+
+    public ConnectionHandler(TcpClient tcpClient) {
+        this.tcpClient = tcpClient;
     }
 
     /**
@@ -88,6 +92,11 @@ public class ConnectionHandler extends ChannelDuplexHandler {
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
         log.info("channelInactive");
         super.channelInactive(ctx);
+
+        if (this.tcpClient.option(NetworkOptions.RECONNECT_SWITCH)) {
+
+            tcpClient.reconnect(tcpClient.getUrl(), );
+        }
     }
 
     @Override
