@@ -94,8 +94,7 @@ public class ConnectionHandler extends ChannelDuplexHandler {
         super.channelInactive(ctx);
 
         if (this.tcpClient.option(NetworkOptions.RECONNECT_SWITCH)) {
-
-            tcpClient.reconnect(tcpClient.getUrl(), );
+            tcpClient.reconnect();
         }
     }
 
