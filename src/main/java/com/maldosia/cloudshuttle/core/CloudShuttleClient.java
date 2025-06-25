@@ -4,14 +4,10 @@ import io.netty.channel.ChannelFuture;
 
 public interface CloudShuttleClient extends OptionContainer{
 
-    ChannelFuture connect(Url url);
-
-    ChannelFuture connect(Url url, int connectTimeout);
+    ChannelFuture connect();
 
     void disconnect();
-
-    void reconnect();
-
+    
     /**
      * 同步发送，需要等待响应
      */

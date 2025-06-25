@@ -14,10 +14,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.maldosia.cloudshuttle.core.handler;
+package com.maldosia.cloudshuttle.core;
 
-import com.maldosia.cloudshuttle.core.OptionContainer;
-import com.maldosia.cloudshuttle.core.TcpClient;
 import com.maldosia.cloudshuttle.core.options.NetworkOptions;
 import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelHandler;
@@ -27,11 +25,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.SocketAddress;
+import java.util.concurrent.TimeUnit;
 
 @ChannelHandler.Sharable
 public class ConnectionHandler extends ChannelDuplexHandler {
 
-    private static final Logger log = LoggerFactory.getLogger(TcpClient.class);
+    private static final Logger log = LoggerFactory.getLogger(ConnectionHandler.class);
 
     private final TcpClient tcpClient;
 
@@ -45,7 +44,7 @@ public class ConnectionHandler extends ChannelDuplexHandler {
     @Override
     public void connect(ChannelHandlerContext ctx, SocketAddress remoteAddress,
                         SocketAddress localAddress, ChannelPromise promise) throws Exception {
-        log.info("connect");
+//        log.info("connect");
         super.connect(ctx, remoteAddress, localAddress, promise);
     }
 
@@ -54,7 +53,7 @@ public class ConnectionHandler extends ChannelDuplexHandler {
      */
     @Override
     public void disconnect(ChannelHandlerContext ctx, ChannelPromise promise) throws Exception {
-        log.info("disconnect");
+//        log.info("disconnect");
         super.disconnect(ctx, promise);
     }
 
@@ -63,7 +62,7 @@ public class ConnectionHandler extends ChannelDuplexHandler {
      */
     @Override
     public void close(ChannelHandlerContext ctx, ChannelPromise promise) throws Exception {
-        log.info("close");
+//        log.info("close");
         super.close(ctx, promise);
     }
 
@@ -72,41 +71,42 @@ public class ConnectionHandler extends ChannelDuplexHandler {
      */
     @Override
     public void channelRegistered(ChannelHandlerContext ctx) throws Exception {
-        log.info("channelRegistered");
+//        log.info("channelRegistered");
         super.channelRegistered(ctx);
     }
 
     @Override
     public void channelUnregistered(ChannelHandlerContext ctx) throws Exception {
-        log.info("channelUnregistered");
+//        log.info("channelUnregistered");
         super.channelUnregistered(ctx);
     }
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
-        log.info("channelActive");
+//        log.info("channelActive");
         super.channelActive(ctx);
     }
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-        log.info("channelInactive");
+        log.info("Disconnect from {}", this.tcpClient.getUrl().getRemoteUrl());
         super.channelInactive(ctx);
 
         if (this.tcpClient.option(NetworkOptions.RECONNECT_SWITCH)) {
-            tcpClient.reconnect();
+            Integer reconnectIntervals = this.tcpClient.option(NetworkOptions.RECONNECT_INTERVALS);
+            ctx.channel().eventLoop().schedule(tcpClient::connect, reconnectIntervals, TimeUnit.SECONDS);
         }
     }
 
     @Override
     public void userEventTriggered(ChannelHandlerContext ctx, Object event) throws Exception {
-        log.info("userEventTriggered");
+//        log.info("userEventTriggered");
         super.userEventTriggered(ctx, event);
     }
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        log.warn("exceptionCaught");
+//        log.warn("exceptionCaught");
         ctx.channel().close();
     }
 }

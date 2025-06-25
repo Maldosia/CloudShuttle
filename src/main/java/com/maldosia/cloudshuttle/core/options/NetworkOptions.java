@@ -12,12 +12,12 @@ public class NetworkOptions {
 
     public static final Option<Boolean> RECONNECT_SWITCH =
             new Option.Builder<>("reconnectSwitch", Boolean.class)
-                    .defaultValue(Boolean.TRUE) // 默认开启重连
+                    .defaultValue(Boolean.FALSE) // 默认开启重连
                     .build();
 
     public static final Option<Integer> RECONNECT_INTERVALS =
             new Option.Builder<>("reconnectIntervals", Integer.class)
-                    .defaultValue(10) // 默认重连间隔
+                    .defaultValue(3) // 默认重连间隔
                     .build();
     
     public static final Option<Integer> CONNECTION_TIMEOUT =

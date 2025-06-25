@@ -1,8 +1,5 @@
 package com.maldosia.cloudshuttle.core;
 
-import com.maldosia.cloudshuttle.core.exception.ConnectionException;
-import com.maldosia.cloudshuttle.core.exception.LifeCycleException;
-import com.maldosia.cloudshuttle.core.handler.ConnectionHandler;
 import com.maldosia.cloudshuttle.core.options.NetworkOptions;
 import com.maldosia.cloudshuttle.core.util.NettyUtil;
 import io.netty.bootstrap.Bootstrap;
@@ -34,7 +31,9 @@ public class TcpClient extends AbstractClient {
 
     private final ConnectionHandler connectionHandler = new ConnectionHandler(this);
 
-    public TcpClient(Codec codec, ChannelHandler handler) {
+    public TcpClient(Url url, Codec codec) {
+        this.url = url;
+        
         this.bootstrap = new Bootstrap();
         this.bootstrap.group(workerGroup).channel(NettyUtil.getClientSocketChannelClass());
                 // TODO set netty option
@@ -43,17 +42,21 @@ public class TcpClient extends AbstractClient {
                 //.option(ChannelOption.SO_KEEPALIVE, ConfigManager.tcp_so_keepalive())
                 //.option(ChannelOption.SO_SNDBUF, ConfigManager.tcp_so_sndbuf())
                 //.option(ChannelOption.SO_RCVBUF, ConfigManager.tcp_so_rcvbuf());
+        
+        this.bootstrap.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, option(NetworkOptions.CONNECTION_TIMEOUT));
 
         this.bootstrap.handler(new ChannelInitializer<SocketChannel>() {
             @Override
             protected void initChannel(SocketChannel socketChannel) throws Exception {
                 ChannelPipeline pipeline = socketChannel.pipeline();
+
                 pipeline.addLast("decoder", codec.newDecoder());
                 pipeline.addLast("encoder", codec.newEncoder());
                 pipeline.addLast("connectionHandler", connectionHandler);
-                pipeline.addLast("handler", handler);
+//                pipeline.addLast("handler", handler);
             }
         });
+        
     }
 
     @Override
@@ -68,37 +71,43 @@ public class TcpClient extends AbstractClient {
 
     }
 
-    @Override
-    public ChannelFuture connect(Url url) {
-        Integer connectionTimeout = option(NetworkOptions.CONNECTION_TIMEOUT);
+//    @Override
+//    public ChannelFuture connect() {
+//        return this.connect(this.url, option(NetworkOptions.CONNECTION_TIMEOUT));
+//    }
 
-        return this.connect(url, connectionTimeout);
-    }
+//    @Override
+//    public ChannelFuture connect(Url url) {
+//        return this.connect(url, option(NetworkOptions.CONNECTION_TIMEOUT));
+//    }
 
     @Override
-    public ChannelFuture connect(Url url, int connectTimeout) {
-        this.url = url;
-        bootstrap.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, connectTimeout);
+    public ChannelFuture connect() {
+//        log.info("Connecting to {}", url.getRemoteUrl());
         ChannelFuture future = this.bootstrap.connect(new InetSocketAddress(url.getRemoteIp(), url.getRemotePort()));
 
         future.awaitUninterruptibly();
-        if (!future.isDone()) {
-            String errMsg = "Create connection to " + url.getRemoteUrl() + " timeout!";
-            throw new ConnectionException(errMsg);
-        }
-        if (future.isCancelled()) {
-            String errMsg = "Create connection to " + url.getRemoteUrl() + " cancelled by user!";
-            throw new ConnectionException(errMsg);
-        }
+//        if (!future.isDone()) {
+//            String errMsg = "Create connection to " + url.getRemoteUrl() + " timeout!";
+//            throw new ConnectionException(errMsg);
+//        }
+//        if (future.isCancelled()) {
+//            String errMsg = "Create connection to " + url.getRemoteUrl() + " cancelled by user!";
+//            throw new ConnectionException(errMsg);
+//        }
         if (!future.isSuccess()) {
-            String errMsg = "Create connection to " + url.getRemoteUrl() + " error!";
-            throw new ConnectionException(errMsg, future.cause());
+//            String errMsg = "Create connection to " + url.getRemoteUrl() + " error!";
+//            throw new ConnectionException(errMsg, future.cause());
+            log.info("Connection to {} failed", url.getRemoteUrl());
+            if (this.option(NetworkOptions.RECONNECT_SWITCH)) {
+                Integer reconnectIntervals = this.option(NetworkOptions.RECONNECT_INTERVALS);
+                future.channel().eventLoop().schedule(this::connect, reconnectIntervals, TimeUnit.SECONDS);
+            }
+        } else {
+            log.info("Connection to {} successful", url.getRemoteUrl());
         }
 
         this.channel = future.channel();
-        if (channel.isActive()) {
-            log.info("create connection to {}", url.getRemoteUrl());
-        }
         return future;
     }
 
@@ -107,26 +116,10 @@ public class TcpClient extends AbstractClient {
     public void disconnect() {
         try {
             if (this.channel != null) {
-                this.channel.close().addListener((ChannelFutureListener) future -> log.info("Close the connection to remote address={}, result={}", getUrl().getRemoteUrl(), future.isSuccess(), future.cause()));
+                this.channel.close().addListener((ChannelFutureListener) future -> log.info("Disconnect from address={}, result={}", getUrl().getRemoteUrl(), future.isSuccess(), future.cause()));
             }
         } catch (Exception e) {
             log.error("Exception caught when closing connection {}", url.getRemoteUrl(), e);
-        }
-    }
-
-    @Override
-    public void reconnect() {
-        if (this.channel != null && this.channel.isActive()) {
-            this.disconnect();
-            ChannelFuture future = this.connect(url);
-
-            if (future.isSuccess()) {
-                log.info("create connection to {} successfully", url.getRemoteUrl());
-            } else {
-                log.error("create connection to {} failed", url.getRemoteUrl());
-                Integer reconnectIntervals = this.option(NetworkOptions.RECONNECT_INTERVALS);
-                future.channel().eventLoop().schedule(this::reconnect, reconnectIntervals, TimeUnit.SECONDS);
-            }
         }
     }
 

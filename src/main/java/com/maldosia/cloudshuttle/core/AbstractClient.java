@@ -13,12 +13,13 @@ public abstract class AbstractClient extends AbstractLifeCycle implements CloudS
     }
 
     @Override
-    public <T> void option(Option<T> key, T value) {
-
+    public <T> OptionContainer option(Option<T> option, T value) {
+        options.option(option, value);
+        return this;
     }
 
     @Override
-    public <T> T option(Option<T> key) {
-        return null;
+    public <T> T option(Option<T> option) {
+        return options.option(option);
     }
 }

@@ -11,12 +11,12 @@ public interface OptionContainer {
     /**
      * 设置配置项
      */
-    <T> void option(Option<T> key, T value);
+    <T> OptionContainer option(Option<T> option, T value);
 
     /**
      * 获取配置项值
      */
-    <T> T option(Option<T> key);
+    <T> T option(Option<T> option);
 
     /**
      * 获取配置项值，如果未设置则返回默认值
