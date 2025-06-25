@@ -8,4 +8,6 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)
 public @interface ProtocolField {
+    int order() default 0;
+    boolean isFunctionCodeField() default false;
 }

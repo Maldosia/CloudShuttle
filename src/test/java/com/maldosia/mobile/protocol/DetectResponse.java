@@ -1,4 +1,4 @@
-package java.com.maldosia.mobile.protocol;
+package com.maldosia.mobile.protocol;
 
 public class DetectResponse {
 }
