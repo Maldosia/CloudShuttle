@@ -1,10 +1,11 @@
 package com.maldosia.mobile.tcp;
 
-import com.maldosia.cloudshuttle.core.DefaultCodec;
 import com.maldosia.cloudshuttle.core.TcpClient;
 import com.maldosia.cloudshuttle.core.Url;
 import com.maldosia.cloudshuttle.core.options.NetworkOptions;
-import com.maldosia.mobile.protocol.DetectRequest;
+import com.maldosia.mobile.protocol.MobileFunctionCode;
+import com.maldosia.mobile.protocol.MobileProtocol;
+import com.maldosia.mobile.protocol.ScanRequest;
 
 /**
  * @author Maldosia
@@ -13,8 +14,11 @@ import com.maldosia.mobile.protocol.DetectRequest;
 public class TcpClientTest {
 
     public static void main(String[] args) {
-        TcpClient tcpClient = new TcpClient(new Url("127.0.0.1", 18000));
-        tcpClient.registerProtocol(new DetectRequest());
+        MobileProtocol mobileProtocol = new MobileProtocol();
+        mobileProtocol.registerCommands(MobileFunctionCode.SCAN_REQUEST, new ScanRequest());
+        mobileProtocol.registerCommands(MobileFunctionCode.SCAN_RESPONSE, new ScanRequest());
+
+        TcpClient tcpClient = new TcpClient(new Url("127.0.0.1", 18000), mobileProtocol);
         tcpClient.startup();
         tcpClient.option(NetworkOptions.RECONNECT_SWITCH, Boolean.TRUE);
         tcpClient.connect();

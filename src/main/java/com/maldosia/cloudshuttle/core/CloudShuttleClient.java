@@ -7,7 +7,7 @@ public interface CloudShuttleClient extends OptionContainer{
     ChannelFuture connect();
 
     void disconnect();
-    
+
     /**
      * 同步发送，需要等待响应
      */
@@ -18,5 +18,5 @@ public interface CloudShuttleClient extends OptionContainer{
      * 异步发送，不需要等待响应
      */
     void sendAsync(Object message);
-    
+
 }

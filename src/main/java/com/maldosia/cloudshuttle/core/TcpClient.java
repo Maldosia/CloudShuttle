@@ -31,7 +31,7 @@ public class TcpClient extends AbstractClient {
 
     private final ConnectionHandler connectionHandler = new ConnectionHandler(this);
 
-    public TcpClient(Url url, Codec codec) {
+    public TcpClient(Url url, Protocol protocol) {
         this.url = url;
         
         this.bootstrap = new Bootstrap();
@@ -42,7 +42,7 @@ public class TcpClient extends AbstractClient {
                 //.option(ChannelOption.SO_KEEPALIVE, ConfigManager.tcp_so_keepalive())
                 //.option(ChannelOption.SO_SNDBUF, ConfigManager.tcp_so_sndbuf())
                 //.option(ChannelOption.SO_RCVBUF, ConfigManager.tcp_so_rcvbuf());
-        
+
         this.bootstrap.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, option(NetworkOptions.CONNECTION_TIMEOUT));
 
         this.bootstrap.handler(new ChannelInitializer<SocketChannel>() {
@@ -50,13 +50,12 @@ public class TcpClient extends AbstractClient {
             protected void initChannel(SocketChannel socketChannel) throws Exception {
                 ChannelPipeline pipeline = socketChannel.pipeline();
 
-                pipeline.addLast("decoder", codec.newDecoder());
-                pipeline.addLast("encoder", codec.newEncoder());
+                pipeline.addLast("decoder", protocol.getDecoder());
+                pipeline.addLast("encoder", protocol.getEncoder());
                 pipeline.addLast("connectionHandler", connectionHandler);
 //                pipeline.addLast("handler", handler);
             }
         });
-        
     }
 
     @Override
@@ -70,16 +69,6 @@ public class TcpClient extends AbstractClient {
         // enable reconnect
 
     }
-
-//    @Override
-//    public ChannelFuture connect() {
-//        return this.connect(this.url, option(NetworkOptions.CONNECTION_TIMEOUT));
-//    }
-
-//    @Override
-//    public ChannelFuture connect(Url url) {
-//        return this.connect(url, option(NetworkOptions.CONNECTION_TIMEOUT));
-//    }
 
     @Override
     public ChannelFuture connect() {

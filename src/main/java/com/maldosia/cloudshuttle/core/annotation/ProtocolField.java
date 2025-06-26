@@ -9,5 +9,6 @@ import java.lang.annotation.Target;
 @Target(ElementType.FIELD)
 public @interface ProtocolField {
     int order() default 0;
+    int length() default 0;
     boolean isFunctionCodeField() default false;
 }
