@@ -10,5 +10,10 @@ import java.lang.annotation.Target;
 public @interface ProtocolField {
     int order() default 0;
     int length() default 0;
+
+    boolean isStartFlagField() default false;
     boolean isFunctionCodeField() default false;
+    boolean isLengthField() default false;
+    boolean isContentField() default false;
+    boolean isEndFlagField() default false;
 }

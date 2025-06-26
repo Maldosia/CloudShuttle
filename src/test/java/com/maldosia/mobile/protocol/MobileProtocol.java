@@ -1,6 +1,7 @@
 package com.maldosia.mobile.protocol;
 
 import com.maldosia.cloudshuttle.core.AbstractProtocol;
+import io.netty.channel.ChannelHandler;
 
 /**
  *
@@ -10,7 +11,7 @@ import com.maldosia.cloudshuttle.core.AbstractProtocol;
  * +-----------------------+------------------------------------------------------------------------+
  * |    content length     |                              reserve                                   |
  * +------------------------------------------------------------------------------------------------+
- * |                                         body                                                   |
+ * |                                      content                                                   |
  * +------------------------------------------------------------------------------------------------+
  *
  * @author Maldosia
@@ -19,4 +20,9 @@ import com.maldosia.cloudshuttle.core.AbstractProtocol;
 public class MobileProtocol extends AbstractProtocol {
 
 
+    @Override
+    public ChannelHandler getDecoder() {
+
+        return null;
+    }
 }

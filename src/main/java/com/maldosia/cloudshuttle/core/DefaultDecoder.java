@@ -12,16 +12,20 @@ import java.util.List;
  */
 public class DefaultDecoder extends ByteToMessageDecoder {
 
-    // 协议固定起始位
-    private static final byte[] START_SIGN = {
-            (byte) 0xAA, (byte) 0x55, (byte) 0x99, (byte) 0x66
-    };
+    private final byte[] startFlag;
+    private final byte[] endFlag;
+
+    public DefaultDecoder() {
+        Command commandTemplate = CommandFactory.getCommandTemplate();
+        startFlag = commandTemplate.getStartFlag();
+        endFlag = commandTemplate.getEndFlag();
+    }
     
     // 协议头固定长度（不包括变长报文体）
     private static final int FIXED_HEADER_LENGTH = 32; // 4*6 + 12 = 32字节
     
     @Override
-    protected void decode(ChannelHandlerContext channelHandlerContext, ByteBuf in, List<Object> list) throws Exception {
+    protected void decode(ChannelHandlerContext channelHandlerContext, ByteBuf in, List<Object> out) throws Exception {
         // 确保有足够数据读取起始位
         if (in.readableBytes() < 4) {
             return;
@@ -31,6 +35,7 @@ public class DefaultDecoder extends ByteToMessageDecoder {
 
         // 1. 查找起始位
         if (!findStartFlag(in)) {
+            in.skipBytes(1); // 未匹配起始位，跳过1字节继续查找
             return;
         }
 
@@ -73,24 +78,12 @@ public class DefaultDecoder extends ByteToMessageDecoder {
 
     // 查找起始位并移动读指针
     private boolean findStartFlag(ByteBuf in) {
-        while (in.readableBytes() >= 4) {
-            int startIndex = in.readerIndex();
-
-            // 检查起始位
-            boolean match = true;
-            for (int i = 0; i < 4; i++) {
-                if (in.getByte(startIndex + i) != START_SIGN[i]) {
-                    match = false;
-                    break;
-                }
+        for (int i = 0; i < startFlag.length; i++) {
+            if (in.getByte(in.readerIndex() + i) != startFlag[i]) {
+                return false;
             }
-
-            if (match) {
-                in.readerIndex(startIndex + 4); // 移动指针到起始位后
-                return true;
-            }
-            in.skipBytes(1); // 未匹配，跳过1字节继续查找
         }
-        return false;
+        in.skipBytes(4);  // 匹配成功，跳过起始位
+        return true;
     }
 }

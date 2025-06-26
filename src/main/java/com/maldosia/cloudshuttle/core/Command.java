@@ -4,6 +4,8 @@ import java.io.Serializable;
 
 public interface Command extends Serializable {
 
+
+
     FunctionCode getFunctionCode();
 
     void serializeContent();

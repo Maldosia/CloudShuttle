@@ -13,9 +13,4 @@ public abstract class AbstractProtocol implements Protocol {
     public ChannelHandler getEncoder() {
         return new DefaultEncoder();
     }
-
-    @Override
-    public ChannelHandler getDecoder() {
-        return new DefaultDecoder();
-    }
 }
