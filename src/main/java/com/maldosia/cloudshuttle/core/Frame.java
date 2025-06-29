@@ -2,13 +2,11 @@ package com.maldosia.cloudshuttle.core;
 
 import java.io.Serializable;
 
-public interface Command extends Serializable {
-
-
+public interface Frame extends Serializable {
 
     FunctionCode getFunctionCode();
 
-    void serializeContent();
+    void serializeBody();
 
-    void deserializeContent();
+    void deserializeBody();
 }

@@ -8,82 +8,12 @@ import java.util.List;
 
 /**
  * @author Maldosia
- * @since 2025/6/26
+ * @since 2025/6/30
  */
 public class DefaultDecoder extends ByteToMessageDecoder {
 
-    private final byte[] startFlag;
-    private final byte[] endFlag;
-
-    public DefaultDecoder() {
-        Command commandTemplate = CommandFactory.getCommandTemplate();
-        startFlag = commandTemplate.getStartFlag();
-        endFlag = commandTemplate.getEndFlag();
-    }
-    
-    // 协议头固定长度（不包括变长报文体）
-    private static final int FIXED_HEADER_LENGTH = 32; // 4*6 + 12 = 32字节
-    
     @Override
-    protected void decode(ChannelHandlerContext channelHandlerContext, ByteBuf in, List<Object> out) throws Exception {
-        // 确保有足够数据读取起始位
-        if (in.readableBytes() < 4) {
-            return;
-        }
-
-        in.markReaderIndex(); // 标记当前读取位置
-
-        // 1. 查找起始位
-        if (!findStartFlag(in)) {
-            in.skipBytes(1); // 未匹配起始位，跳过1字节继续查找
-            return;
-        }
-
-        // 2. 检查完整协议头（32字节）
-        if (in.readableBytes() < FIXED_HEADER_LENGTH - 4) { // 已读4字节起始位
-            in.resetReaderIndex();
-            return;
-        }
-
-        // 3. 读取协议头其他字段
-        int checksum = in.readInt();      // 校验位（4字节）
-        int version = in.readInt();       // 版本（4字节）
-        int functionCode = in.readInt();  // 功能码（4字节）
-        int totalLength = in.readInt();   // 总长度（4字节）
-        in.skipBytes(12);                 // 跳过预留位（12字节）
-
-        // 4. 验证长度有效性
-        if (totalLength < FIXED_HEADER_LENGTH) {
-            in.resetReaderIndex();
-            throw new IllegalArgumentException("Invalid total length: " + totalLength);
-        }
-
-        // 5. 检查报文完整性
-        int bodyLength = totalLength - FIXED_HEADER_LENGTH;
-        if (in.readableBytes() < bodyLength) {
-            in.resetReaderIndex(); // 等待更多数据
-            return;
-        }
-
-        // 6. 提取报文体
-        ByteBuf body = in.readRetainedSlice(bodyLength);
-
-        // 7. 构造协议对象（自定义类需实现）
-        CustomProtocolMessage message = new CustomProtocolMessage(
-                checksum, version, functionCode, totalLength, body
-        );
-
-        out.add(message);
-    }
-
-    // 查找起始位并移动读指针
-    private boolean findStartFlag(ByteBuf in) {
-        for (int i = 0; i < startFlag.length; i++) {
-            if (in.getByte(in.readerIndex() + i) != startFlag[i]) {
-                return false;
-            }
-        }
-        in.skipBytes(4);  // 匹配成功，跳过起始位
-        return true;
+    protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
+        
     }
 }

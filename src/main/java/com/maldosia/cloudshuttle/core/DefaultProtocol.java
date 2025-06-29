@@ -8,7 +8,7 @@ import io.netty.handler.codec.string.StringEncoder;
  * @author Maldosia
  * @since 2025/6/26
  */
-public abstract class DefaultProtocol implements Protocol{
+public abstract class DefaultProtocol implements Protocol {
 
     @Override
     public ChannelHandler getEncoder() {

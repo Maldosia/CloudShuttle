@@ -3,7 +3,6 @@ package com.maldosia.mobile.tcp;
 import com.maldosia.cloudshuttle.core.TcpClient;
 import com.maldosia.cloudshuttle.core.Url;
 import com.maldosia.cloudshuttle.core.options.NetworkOptions;
-import com.maldosia.mobile.protocol.MobileFunctionCode;
 import com.maldosia.mobile.protocol.MobileProtocol;
 import com.maldosia.mobile.protocol.ScanRequest;
 
@@ -15,8 +14,8 @@ public class TcpClientTest {
 
     public static void main(String[] args) {
         MobileProtocol mobileProtocol = new MobileProtocol();
-        mobileProtocol.registerCommands(MobileFunctionCode.SCAN_REQUEST, new ScanRequest());
-        mobileProtocol.registerCommands(MobileFunctionCode.SCAN_RESPONSE, new ScanRequest());
+        mobileProtocol.registerFrame(new ScanRequest());
+        mobileProtocol.registerFrame(new ScanRequest());
 
         TcpClient tcpClient = new TcpClient(new Url("127.0.0.1", 18000), mobileProtocol);
         tcpClient.startup();

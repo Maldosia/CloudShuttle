@@ -1,6 +1,7 @@
 package com.maldosia.mobile.protocol;
 
 import com.maldosia.cloudshuttle.core.AbstractProtocol;
+import com.maldosia.cloudshuttle.core.FrameDelimiterDecoder;
 import io.netty.channel.ChannelHandler;
 
 /**
@@ -18,11 +19,9 @@ import io.netty.channel.ChannelHandler;
  * @since 2025/6/26
  */
 public class MobileProtocol extends AbstractProtocol {
-
-
+    
     @Override
     public ChannelHandler getDecoder() {
-
-        return null;
+        return new FrameDelimiterDecoder();
     }
 }

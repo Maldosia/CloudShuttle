@@ -14,6 +14,6 @@ public @interface ProtocolField {
     boolean isStartFlagField() default false;
     boolean isFunctionCodeField() default false;
     boolean isLengthField() default false;
-    boolean isContentField() default false;
+    boolean isBody() default false;
     boolean isEndFlagField() default false;
 }

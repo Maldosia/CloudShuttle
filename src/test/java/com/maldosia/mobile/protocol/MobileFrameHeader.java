@@ -1,9 +1,9 @@
 package com.maldosia.mobile.protocol;
 
-import com.maldosia.cloudshuttle.core.Command;
+import com.maldosia.cloudshuttle.core.Frame;
 import com.maldosia.cloudshuttle.core.annotation.ProtocolField;
 
-public abstract class MobileCommandHeader implements Command {
+public abstract class MobileFrameHeader implements Frame {
 
     @ProtocolField(order = 1, length = 4, isStartFlagField = true)
     private byte[] startFlag;
@@ -17,26 +17,17 @@ public abstract class MobileCommandHeader implements Command {
     @ProtocolField(order = 4, length = 4)
     private byte[] reserved;
 
-    @ProtocolField(isContentField = true)
-    private byte[] content;
+    @ProtocolField(isBody = true)
+    private byte[] body;
+    
 
     @Override
-    public byte[] getStartFlag() {
-        return new byte[]{(byte) 0xAA, (byte) 0x55, (byte) 0x99, (byte) 0x66};
-    }
-
-    @Override
-    public byte[] getEndFlag() {
-        return new byte[0];
-    }
-
-    @Override
-    public void serializeContent() {
+    public void serializeBody() {
 
     }
 
     @Override
-    public void deserializeContent() {
+    public void deserializeBody() {
 
     }
 }
