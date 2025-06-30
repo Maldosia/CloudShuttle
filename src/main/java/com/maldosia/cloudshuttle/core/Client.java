@@ -2,7 +2,7 @@ package com.maldosia.cloudshuttle.core;
 
 import io.netty.channel.ChannelFuture;
 
-public interface CloudShuttleClient extends OptionContainer{
+public interface Client extends OptionContainer{
 
     ChannelFuture connect();
 

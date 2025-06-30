@@ -4,6 +4,7 @@ import com.maldosia.cloudshuttle.core.TcpClient;
 import com.maldosia.cloudshuttle.core.Url;
 import com.maldosia.cloudshuttle.core.options.NetworkOptions;
 import com.maldosia.cloudshuttle.core.protocol.CommonProtocolDefinition;
+import com.maldosia.cloudshuttle.core.protocol.ProtocolFieldEnum;
 import com.maldosia.mobile.protocol.MobileProtocol;
 import com.maldosia.mobile.protocol.ScanRequest;
 
@@ -15,16 +16,16 @@ public class TcpClientTest {
 
     public static void main(String[] args) {
         // 1. 创建协议定义
+        byte[] startFlag = new byte[]{(byte)0xAA, (byte)0x55, (byte)0x99, (byte)0x66};
+        byte[] endFlag = new byte[]{(byte) 0x66, (byte) 0x99, (byte) 0x55, (byte) 0xAA};
         CommonProtocolDefinition protocol = CommonProtocolDefinition.builder()
-                .addDelimiter("START_DELIMITER", new byte[4]) // 起始位
-                .addField("CHECKSUM", 4)       // 校验位
-                .addField("VERSION", 4)        // 版本
-                .addField("FUNCTION_CODE", 4)  // 功能码
-                .setLengthField("LENGTH")      // 长度字段名
-                .addField("LENGTH", 4)         // 长度字段
-                .addField("RESERVED", 12)      // 预留
-                .setBodyField("BODY")          // 报文字段名
-                .addDelimiter("END_DELIMITER", new byte[4]) // 结束位
+                .addField(startFlag, ProtocolFieldEnum.START_FLAG) // 起始位
+                .addField(4, ProtocolFieldEnum.HEADER)       // 校验位
+                .addField(4, ProtocolFieldEnum.HEADER)        // 版本
+                .addField(4, ProtocolFieldEnum.HEADER)  // 功能码
+                .addField(4, ProtocolFieldEnum.LENGTH)      // 长度字段
+                .addField(12, ProtocolFieldEnum.HEADER)      // 预留
+                .addField(endFlag, ProtocolFieldEnum.HEADER) // 结束位
                 .build();
 
 

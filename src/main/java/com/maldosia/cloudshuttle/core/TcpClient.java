@@ -25,7 +25,7 @@ public class TcpClient extends AbstractClient {
 
     private final Bootstrap bootstrap;
 
-    private Url url;
+    private final Url url;
 
     private Channel channel;
 

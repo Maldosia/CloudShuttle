@@ -2,7 +2,7 @@ package com.maldosia.mobile.protocol;
 
 import com.maldosia.cloudshuttle.core.Frame;
 import com.maldosia.cloudshuttle.core.FunctionCode;
-import com.maldosia.cloudshuttle.core.annotation.ProtocolField;
+import com.maldosia.cloudshuttle.core.protocol.ProtocolField;
 
 public class ScanResponse implements Frame {
 

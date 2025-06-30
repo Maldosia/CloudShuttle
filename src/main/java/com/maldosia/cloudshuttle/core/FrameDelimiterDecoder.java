@@ -18,13 +18,13 @@ import java.util.Map;
 public class FrameDelimiterDecoder extends ByteToMessageDecoder {
 
     private final CommonProtocolDefinition commonProtocolDefinition;
-    private final Map<String, byte[]> delimiterMap = new HashMap<>();
+    private final byte[] startFlag;
+    private final byte[] endFlag;
 
     public FrameDelimiterDecoder(CommonProtocolDefinition commonProtocolDefinition) {
         this.commonProtocolDefinition = commonProtocolDefinition;
-        // 预定义分隔符
-        delimiterMap.put("START_DELIMITER", new byte[]{(byte)0xAA, (byte)0x55, (byte)0x99, (byte)0x66});
-        delimiterMap.put("END_DELIMITER", new byte[]{(byte)0x66, (byte)0x99, (byte)0x55, (byte)0xAA});
+        this.startFlag = commonProtocolDefinition.getStartFlag();
+        this.endFlag = commonProtocolDefinition.getEndFlag();
     }
     
     @Override

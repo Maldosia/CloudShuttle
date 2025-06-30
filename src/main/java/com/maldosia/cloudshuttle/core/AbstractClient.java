@@ -4,7 +4,7 @@ package com.maldosia.cloudshuttle.core;
  * @author Maldosia
  * @since 2025/6/22
  */
-public abstract class AbstractClient extends AbstractLifeCycle implements CloudShuttleClient {
+public abstract class AbstractClient extends AbstractLifeCycle implements Client {
     
     public final BaseOptions options;
 

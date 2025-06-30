@@ -1,4 +1,4 @@
-package com.maldosia.cloudshuttle.core.annotation;
+package com.maldosia.cloudshuttle.core.protocol;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
