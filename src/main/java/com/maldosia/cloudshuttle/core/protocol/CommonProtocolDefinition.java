@@ -1,5 +1,7 @@
 package com.maldosia.cloudshuttle.core.protocol;
 
+import com.maldosia.cloudshuttle.core.ProtocolDefinition;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -8,13 +10,13 @@ import java.util.List;
  * @author Maldosia
  * @since 2025/6/30
  */
-public class DefaultProtocolDefinition implements ProtocolDefinition{
+public class CommonProtocolDefinition implements ProtocolDefinition {
 
     private final List<Field> fields;
     private final String lengthFieldName;
     private final String bodyFieldName;
 
-    public DefaultProtocolDefinition(Builder builder) {
+    public CommonProtocolDefinition(Builder builder) {
         this.fields = Collections.unmodifiableList(builder.fields);
         this.lengthFieldName = builder.lengthFieldName;
         this.bodyFieldName = builder.bodyFieldName;
@@ -68,10 +70,10 @@ public class DefaultProtocolDefinition implements ProtocolDefinition{
             return this;
         }
 
-        public DefaultProtocolDefinition build() {
+        public CommonProtocolDefinition build() {
             if (lengthFieldName == null) throw new IllegalStateException("Length field not set");
             if (bodyFieldName == null) throw new IllegalStateException("Body field not set");
-            return new DefaultProtocolDefinition(this);
+            return new CommonProtocolDefinition(this);
         }
     }
 

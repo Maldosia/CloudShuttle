@@ -1,7 +1,7 @@
 package com.maldosia.cloudshuttle.core;
 
 import com.maldosia.cloudshuttle.core.protocol.Field;
-import com.maldosia.cloudshuttle.core.protocol.ProtocolDefinition;
+import com.maldosia.cloudshuttle.core.protocol.CommonProtocolDefinition;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
@@ -17,11 +17,11 @@ import java.util.Map;
  */
 public class FrameDelimiterDecoder extends ByteToMessageDecoder {
 
-    private final ProtocolDefinition protocolDefinition;
+    private final CommonProtocolDefinition commonProtocolDefinition;
     private final Map<String, byte[]> delimiterMap = new HashMap<>();
 
-    public FrameDelimiterDecoder(ProtocolDefinition protocolDefinition) {
-        this.protocolDefinition = protocolDefinition;
+    public FrameDelimiterDecoder(CommonProtocolDefinition commonProtocolDefinition) {
+        this.commonProtocolDefinition = commonProtocolDefinition;
         // 预定义分隔符
         delimiterMap.put("START_DELIMITER", new byte[]{(byte)0xAA, (byte)0x55, (byte)0x99, (byte)0x66});
         delimiterMap.put("END_DELIMITER", new byte[]{(byte)0x66, (byte)0x99, (byte)0x55, (byte)0xAA});
@@ -55,7 +55,7 @@ public class FrameDelimiterDecoder extends ByteToMessageDecoder {
         ByteBuf body = null;
 
         // 1. 按顺序解码字段
-        for (Field field : protocolDefinition.getFields()) {
+        for (Field field : commonProtocolDefinition.getFields()) {
             // 检查足够数据
             if (in.readableBytes() < field.getLength()) {
                 in.readerIndex(startIdx); // 重置读指针
@@ -82,7 +82,7 @@ public class FrameDelimiterDecoder extends ByteToMessageDecoder {
                 delimiters.put(field.getName(), value);
             }
             // 处理长度字段
-            else if (field.getName().equals(protocolDefinition.getLengthFieldName())) {
+            else if (field.getName().equals(commonProtocolDefinition.getLengthFieldName())) {
                 ByteBuf fieldBuf = in.readSlice(field.getLength()).retain();
                 fields.put(field.getName(), fieldBuf);
 
@@ -90,7 +90,7 @@ public class FrameDelimiterDecoder extends ByteToMessageDecoder {
                 int totalLength = fieldBuf.getInt(fieldBuf.readerIndex());
 
                 // 验证长度有效性
-                int minLength = protocolDefinition.getFixedHeaderLength();
+                int minLength = commonProtocolDefinition.getFixedHeaderLength();
                 if (totalLength < minLength) {
                     throw new ProtocolException("Invalid length: " + totalLength);
                 }
@@ -102,9 +102,9 @@ public class FrameDelimiterDecoder extends ByteToMessageDecoder {
                 }
             }
             // 处理报文体
-            else if (field.getName().equals(protocolDefinition.getBodyFieldName())) {
+            else if (field.getName().equals(commonProtocolDefinition.getBodyFieldName())) {
                 // 获取长度字段值
-                ByteBuf lengthField = fields.get(protocolDefinition.getLengthFieldName());
+                ByteBuf lengthField = fields.get(commonProtocolDefinition.getLengthFieldName());
                 if (lengthField == null) {
                     throw new ProtocolException("Length field not found");
                 }
