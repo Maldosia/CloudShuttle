@@ -1,15 +1,16 @@
 package com.maldosia.cloudshuttle.core;
 
-import com.maldosia.cloudshuttle.core.protocol.Field;
+import com.maldosia.cloudshuttle.core.protocol.ProtocolField;
 import com.maldosia.cloudshuttle.core.protocol.CommonProtocolDefinition;
+import com.maldosia.cloudshuttle.core.protocol.ProtocolFieldEnum;
+import com.maldosia.cloudshuttle.core.protocol.ProtocolLengthField;
+import com.maldosia.cloudshuttle.core.util.ByteUtil;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
 
 import java.net.ProtocolException;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * @author Maldosia
@@ -17,14 +18,10 @@ import java.util.Map;
  */
 public class FrameDelimiterDecoder extends ByteToMessageDecoder {
 
-    private final CommonProtocolDefinition commonProtocolDefinition;
-    private final byte[] startFlag;
-    private final byte[] endFlag;
+    private final CommonProtocolDefinition protocolDefinition;
 
     public FrameDelimiterDecoder(CommonProtocolDefinition commonProtocolDefinition) {
-        this.commonProtocolDefinition = commonProtocolDefinition;
-        this.startFlag = commonProtocolDefinition.getStartFlag();
-        this.endFlag = commonProtocolDefinition.getEndFlag();
+        this.protocolDefinition = commonProtocolDefinition;
     }
     
     @Override
@@ -49,88 +46,84 @@ public class FrameDelimiterDecoder extends ByteToMessageDecoder {
     }
 
     private Object decodeFrame(ByteBuf in) throws ProtocolException {
-        int startIdx = in.readerIndex();
-        Map<String, ByteBuf> fields = new HashMap<>();
-        Map<String, byte[]> delimiters = new HashMap<>();
-        ByteBuf body = null;
+        // 确保有足够数据读取起始位
+        if (in.readableBytes() < protocolDefinition.getStartFlagFieldLength()) {
+            return null;
+        }
+        
+        // 标记当前位置
+        in.markReaderIndex();
+        
+        // 1.查找起始位
+        if (!findStartFlag(in, protocolDefinition.getStartFlagField())) {
+            return null;
+        }
 
-        // 1. 按顺序解码字段
-        for (Field field : commonProtocolDefinition.getFields()) {
-            // 检查足够数据
-            if (in.readableBytes() < field.getLength()) {
-                in.readerIndex(startIdx); // 重置读指针
-                return null; // 数据不足
-            }
+        // 2. 确保能够读取到完整的协议
+        if (in.readableBytes() < protocolDefinition.getAllFieldsLength() - protocolDefinition.getStartFlagFieldLength()) { // 已读起始位长度
+            in.resetReaderIndex();
+            return null;
+        }
 
-            // 处理分隔符字段
-            if (field.isDelimiter()) {
-                byte[] expected = delimiterMap.get(field.getName());
-                if (expected == null) {
-                    throw new ProtocolException("Undefined delimiter: " + field.getName());
+        // 3. 读取协议头其他字段
+        for (ProtocolField field : protocolDefinition.getAllFields()) {
+            if (field.getType() == ProtocolFieldEnum.START_FLAG) continue;
+
+            byte[] value = new byte[field.getLength()];
+            in.readBytes(value);
+            field.setValue(value);
+            
+            if (field.getType() == ProtocolFieldEnum.LENGTH) {
+                // 4. 验证长度有效性
+                if (isValidLength(in, field)) {
+                    in.resetReaderIndex();
+                    throw new IllegalArgumentException("Invalid total length");
                 }
-
-                // 验证分隔符
-                for (int i = 0; i < field.getLength(); i++) {
-                    if (in.getByte(in.readerIndex() + i) != expected[i]) {
-                        throw new ProtocolException("Invalid " + field.getName() + " delimiter");
-                    }
-                }
-
-                // 存储分隔符值
-                byte[] value = new byte[field.getLength()];
-                in.readBytes(value);
-                delimiters.put(field.getName(), value);
-            }
-            // 处理长度字段
-            else if (field.getName().equals(commonProtocolDefinition.getLengthFieldName())) {
-                ByteBuf fieldBuf = in.readSlice(field.getLength()).retain();
-                fields.put(field.getName(), fieldBuf);
-
-                // 读取总长度值
-                int totalLength = fieldBuf.getInt(fieldBuf.readerIndex());
-
-                // 验证长度有效性
-                int minLength = commonProtocolDefinition.getFixedHeaderLength();
-                if (totalLength < minLength) {
-                    throw new ProtocolException("Invalid length: " + totalLength);
-                }
-
-                // 检查完整数据包
-                if (in.readableBytes() < (totalLength - (in.readerIndex() - startIdx))) {
-                    in.readerIndex(startIdx); // 重置等待
-                    return null;
-                }
-            }
-            // 处理报文体
-            else if (field.getName().equals(commonProtocolDefinition.getBodyFieldName())) {
-                // 获取长度字段值
-                ByteBuf lengthField = fields.get(commonProtocolDefinition.getLengthFieldName());
-                if (lengthField == null) {
-                    throw new ProtocolException("Length field not found");
-                }
-
-                int totalLength = lengthField.getInt(lengthField.readerIndex());
-                int bodyLength = totalLength - (in.readerIndex() - startIdx) - getDelimiterLength("END_DELIMITER");
-
-                if (bodyLength < 0) {
-                    throw new ProtocolException("Negative body length");
-                }
-
-                body = in.readRetainedSlice(bodyLength);
-                fields.put(field.getName(), body);
-            }
-            // 处理普通字段
-            else {
-                fields.put(field.getName(), in.readSlice(field.getLength()).retain());
             }
         }
 
+        // 5.校验码
+        // 6.结束标志
+        
         return FrameFactory.createFrame(fields, delimiters, body);
     }
+    
+    private boolean isValidLength(ByteBuf in, ProtocolField field) {
+        ProtocolLengthField protocolLengthField = (ProtocolLengthField) field;
+        int length = ByteUtil.toIntLittleEndian(protocolLengthField.getValue());
+        if (protocolLengthField.getLengthFieldEnum() == ProtocolLengthField.ProtocolLengthFieldEnum.PROTOCOL_LENGTH) {
+            //长度域代表整个帧长度
+            int minLength = this.protocolDefinition.getAllFieldsLength();
+            return length >= minLength;
+        } else if (protocolLengthField.getLengthFieldEnum() == ProtocolLengthField.ProtocolLengthFieldEnum.BODY_LENGTH) {
+            //长度域代表帧体长度
+            int readableLength = in.readableBytes();
+            return length >= readableLength;
+        }
+        return true;
+    }
 
-    private int getDelimiterLength(String name) {
-        byte[] delimiter = delimiterMap.get(name);
-        return delimiter != null ? delimiter.length : 0;
+    // 查找起始位并移动读指针
+    private boolean findStartFlag(ByteBuf in, ProtocolField startFlagField) {
+        while (in.readableBytes() >= 4) {
+            int startIndex = in.readerIndex();
+
+            // 检查起始位
+            boolean match = true;
+            for (int i = 0; i < 4; i++) {
+                if (in.getByte(startIndex + i) != startFlagField.getValue()[i]) {
+                    match = false;
+                    break;
+                }
+            }
+
+            if (match) {
+                in.readerIndex(startIndex + 4); // 移动指针到起始位后
+                return true;
+            }
+            in.skipBytes(1); // 未匹配，跳过1字节继续查找
+        }
+        return false;
     }
 
 }

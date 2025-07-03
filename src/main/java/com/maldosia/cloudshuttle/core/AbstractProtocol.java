@@ -11,7 +11,7 @@ public abstract class AbstractProtocol implements Protocol {
     }
 
     @Override
-    public void registerFrame(Frame frame) {
-        FrameFactory.registerFrame(frame);
+    public void registerFrame(Message message) {
+        FrameFactory.registerFrame(message);
     }
 }

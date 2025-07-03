@@ -7,13 +7,13 @@ import java.util.*;
 
 public class FrameFactory {
 
-    private static final Map<FunctionCode, Frame> frames = new HashMap<>();
+    private static final Map<FunctionCode, Message> frames = new HashMap<>();
 
-    public static void registerFrame(Frame frame) {
-        frames.put(frame.getFunctionCode(), frame);
+    public static void registerFrame(Message message) {
+        frames.put(message.getFunctionCode(), message);
     }
 
-    public static Frame createFrame(Map<String, ByteBuf> fields, Map<String, byte[]> delimiters, ByteBuf body) {
+    public static Message createFrame(Map<String, ByteBuf> fields, Map<String, byte[]> delimiters, ByteBuf body) {
 //        return frames.get(functionCode);
         return null;
     }

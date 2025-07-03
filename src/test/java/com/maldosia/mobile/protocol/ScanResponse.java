@@ -1,10 +1,10 @@
 package com.maldosia.mobile.protocol;
 
-import com.maldosia.cloudshuttle.core.Frame;
+import com.maldosia.cloudshuttle.core.Message;
 import com.maldosia.cloudshuttle.core.FunctionCode;
-import com.maldosia.cloudshuttle.core.protocol.ProtocolField;
+import com.maldosia.cloudshuttle.core.ProtocolField;
 
-public class ScanResponse implements Frame {
+public class ScanResponse implements Message {
 
     @ProtocolField(order = 1, length = 4, isStartFlagField = true)
     private byte[] startFlag;

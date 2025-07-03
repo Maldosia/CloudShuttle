@@ -1,19 +1,40 @@
 package com.maldosia.cloudshuttle.core.protocol;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+/**
+ * @author Maldosia
+ * @since 2025/6/30
+ */
+public class ProtocolField {
 
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.FIELD)
-public @interface ProtocolField {
-    int order() default 0;
-    int length() default 0;
+    private byte[] value;
+    private final int length;
+    private final ProtocolFieldEnum type;
 
-    boolean isStartFlagField() default false;
-    boolean isFunctionCodeField() default false;
-    boolean isLengthField() default false;
-    boolean isBody() default false;
-    boolean isEndFlagField() default false;
+    public ProtocolField(int length, ProtocolFieldEnum type) {
+        this.value = new byte[length];
+        this.length = length;
+        this.type = type;
+    }
+
+    public ProtocolField(byte[] value, ProtocolFieldEnum type) {
+        this.value = value;
+        this.length = value.length;
+        this.type = type;
+    }
+
+    public int getLength() {
+        return length;
+    }
+
+    public ProtocolFieldEnum getType() {
+        return type;
+    }
+    
+    public byte[] getValue() {
+        return value;
+    }
+    
+    public void setValue(byte[] value) {
+        this.value = value;
+    }
 }

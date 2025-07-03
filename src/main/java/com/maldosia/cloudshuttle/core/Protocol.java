@@ -4,7 +4,7 @@ import io.netty.channel.ChannelHandler;
 
 public interface Protocol {
     
-    void registerFrame(Frame frame);
+    void registerFrame(Message message);
 
     ChannelHandler getEncoder();
 

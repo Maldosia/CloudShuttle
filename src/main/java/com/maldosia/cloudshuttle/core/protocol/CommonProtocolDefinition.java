@@ -1,6 +1,7 @@
 package com.maldosia.cloudshuttle.core.protocol;
 
 import com.maldosia.cloudshuttle.core.ProtocolDefinition;
+import com.maldosia.cloudshuttle.core.exception.ProtocolException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,98 +14,85 @@ import java.util.List;
  */
 public class CommonProtocolDefinition implements ProtocolDefinition {
 
-    private final byte[] startFlag;
-    private final byte[] length;
-    private final byte[] body;
-    private final byte[] endFlag;
-    private final List<byte[]> headerFieldList;
-    private final List<byte[]> trailerFieldList;
+    private ProtocolField startFlag;
+    private ProtocolField length;
+    private ProtocolField body;
+    private ProtocolField endFlag;
+    private final List<ProtocolField> fieldList = new ArrayList<>();
 
     public CommonProtocolDefinition(Builder builder) {
-        this.headerFieldList = builder.headerFields;
-        this.trailerFieldList = builder.trailerFields;
+        for (ProtocolField field : builder.fields) {
+            fieldList.add(field);
+            switch (field.getType()) {
+                case START_FLAG -> startFlag = field;
+                case END_FLAG -> endFlag = field;
+                case BODY -> body = field;
+                case LENGTH -> length = field;
+                default -> throw new IllegalStateException("Unexpected value: " + field.getType());
+            }
+        }
 
-        this.startFlag = builder.startFlagField;
-        this.length = builder.lengthField;
-        this.body = builder.bodyField;
-        this.endFlag = builder.endFlagField;
+        if (startFlag == null) {
+            throw new ProtocolException("Missing startFlag field");
+        }
+        if (length == null) {
+            throw new ProtocolException("Missing length field");
+        }
     }
 
-    public List<byte[]> getHeaderFields() {
-        return headerFieldList;
-    }
-
-    public List<byte[]> getTrailerFields() {
-        return trailerFieldList;
-    }
-
-    public byte[] getStartFlag() {
+    public ProtocolField getStartFlagField() {
         return startFlag;
     }
-
-    public byte[] getEndFlag() {
-        return endFlag;
+    
+    public int getStartFlagFieldLength(){
+        return startFlag.getLength();
     }
-
-    public byte[] getLength() {
-        return length;
+    
+    public int getAllFieldsLength() {
+        return fieldList.stream().mapToInt(ProtocolField::getLength).sum();
     }
-
-    public byte[] getBody() {
-        return body;
-    }
-
-    public int getFixedHeaderLength() {
-        return headerFieldList.stream()
-                .mapToInt(bytes -> bytes.length)
-                .sum();
-    }
+    
 
     public static Builder builder() {
         return new Builder();
     }
 
+    public List<ProtocolField> getAllFields() {
+        return fieldList;
+    }
+
+
     public static class Builder {
 
-        private byte[] startFlagField;
-        private byte[] endFlagField;
-        private byte[] lengthField;
-        private byte[] bodyField;
-
-        private final List<byte[]> headerFields = new ArrayList<>();
-        private final List<byte[]> trailerFields = new ArrayList<>();
+        private final List<ProtocolField> fields = new ArrayList<>();
 
         public Builder addField(int length, ProtocolFieldEnum protocolField) {
-            switch (protocolField) {
-                case START_FLAG ->
-                    startFlagField = new byte[length];
-                case END_FLAG  ->
-                    endFlagField = new byte[length];
-                case BODY  ->
-                    bodyField = new byte[length];
-                case LENGTH  ->
-                    lengthField = new byte[length];
-                case HEADER  ->
-                    headerFields.add(new byte[length]);
-                case TRAILER  ->
-                    trailerFields.add(new byte[length]);
-            }
+            fields.add(new ProtocolField(length, protocolField));
             return this;
         }
 
-        public Builder addField(byte[] flagField, ProtocolFieldEnum protocolField) {
-            switch (protocolField) {
-                case START_FLAG ->
-                        startFlagField = flagField;
-                case END_FLAG  ->
-                        endFlagField = flagField;
-            }
+        public Builder addStartFlagField(byte[] startFlag) {
+            fields.add(new ProtocolField(startFlag, ProtocolFieldEnum.START_FLAG));
             return this;
         }
 
+        public Builder addEndFlagField(byte[] endFlag) {
+            fields.add(new ProtocolField(endFlag, ProtocolFieldEnum.END_FLAG));
+            return this;
+        }
+        
+        public Builder addBodyField() {
+            fields.add(new ProtocolField(0, ProtocolFieldEnum.BODY));
+            return this;
+        }
+
+        public Builder addLengthField(int length, ProtocolLengthField.ProtocolLengthFieldEnum lengthFieldEnum) {
+            fields.add(new ProtocolLengthField(length, ProtocolFieldEnum.LENGTH, lengthFieldEnum));
+            return this;
+        }
+        
         public CommonProtocolDefinition build() {
-            if (lengthField == null) throw new IllegalStateException("Length field not set");
-            if (bodyField == null) throw new IllegalStateException("Body field not set");
+            if (fields.isEmpty()) throw new IllegalStateException("Field not set");
             return new CommonProtocolDefinition(this);
         }
     }
