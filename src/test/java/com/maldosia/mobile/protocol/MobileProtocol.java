@@ -3,7 +3,7 @@ package com.maldosia.mobile.protocol;
 import com.maldosia.cloudshuttle.core.AbstractProtocol;
 import com.maldosia.cloudshuttle.core.FrameDelimiterDecoder;
 import com.maldosia.cloudshuttle.core.FrameDelimiterEncoder;
-import com.maldosia.cloudshuttle.core.protocol.CommonProtocolDefinition;
+import com.maldosia.cloudshuttle.core.protocol.TcpProtocolDefinition;
 import io.netty.channel.ChannelHandler;
 
 /**
@@ -22,17 +22,17 @@ import io.netty.channel.ChannelHandler;
  */
 public class MobileProtocol extends AbstractProtocol {
 
-    public MobileProtocol(CommonProtocolDefinition commonProtocolDefinition) {
-        super(commonProtocolDefinition);
+    public MobileProtocol(TcpProtocolDefinition tcpProtocolDefinition) {
+        super(tcpProtocolDefinition);
     }
 
     @Override
     public ChannelHandler getEncoder() {
-        return new FrameDelimiterEncoder(this.commonProtocolDefinition);
+        return new FrameDelimiterEncoder(this.tcpProtocolDefinition);
     }
 
     @Override
     public ChannelHandler getDecoder() {
-        return new FrameDelimiterDecoder(this.commonProtocolDefinition);
+        return new FrameDelimiterDecoder(this.tcpProtocolDefinition);
     }
 }

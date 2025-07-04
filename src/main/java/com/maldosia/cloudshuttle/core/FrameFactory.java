@@ -1,21 +1,64 @@
 package com.maldosia.cloudshuttle.core;
 
-import io.netty.buffer.ByteBuf;
+import com.maldosia.cloudshuttle.core.exception.ProtocolException;
+import com.maldosia.cloudshuttle.core.protocol.ProtocolFunctionCode;
+import io.netty.buffer.ByteBufUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Field;
 import java.util.*;
 
 public class FrameFactory {
+    private static final Logger log = LoggerFactory.getLogger(FrameFactory.class);
 
-    private static final Map<FunctionCode, Message> frames = new HashMap<>();
+    private static final Map<byte[], Frame> frames = new HashMap<>();
 
-    public static void registerFrame(Message message) {
-        frames.put(message.getFunctionCode(), message);
+    public static void registerFrame(Frame frame) {
+        //解析帧注解
+        byte[] functionCode = getFunctionCode(frame);
+        frames.put(functionCode, frame);
     }
 
-    public static Message createFrame(Map<String, ByteBuf> fields, Map<String, byte[]> delimiters, ByteBuf body) {
-//        return frames.get(functionCode);
-        return null;
+    //创建对应的frame
+    public static Frame createFrame(byte[] functionCode, List<byte[]> fieldValues) {
+        Frame frame = frames.get(functionCode);
+        if (frame != null) {
+            fillFields(frame, fieldValues);
+            frame.deserializeBody();
+            return frame;
+        } else {
+            log.error("No frame found for function code {}", ByteBufUtil.hexDump(functionCode));
+            return null;
+        }
+    }
+
+    private static byte[] getFunctionCode(Frame frame) {
+        ProtocolFunctionCode annotation = frame.getClass().getAnnotation(ProtocolFunctionCode.class);
+        if (annotation != null) {
+            return annotation.value();
+        } else {
+            throw new ProtocolException("No ProtocolFunctionCode annotation found");
+        }
+    }
+
+    private static void fillFields(Frame frame, List<byte[]> fieldValues) {
+        //1.获取frame所有的属性注解
+        List<Field> allFields = getAllFields(frame.getClass());
+        for (int i = 0; i < allFields.size(); i++) {
+            Field field = allFields.get(i);
+            byte[] value = fieldValues.get(i);
+
+            ProtocolField annotation = field.getAnnotation(ProtocolField.class);
+            if (annotation != null) {
+                int length = annotation.length();
+                if (value == null || value.length != length) {
+                    throw new ProtocolException("Length of field " + field.getName() + " is incorrect");
+                }
+
+            }
+        }
+
     }
 
     /**

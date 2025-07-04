@@ -1,15 +1,14 @@
 package com.maldosia.cloudshuttle.core;
 
 import com.maldosia.cloudshuttle.core.protocol.ProtocolField;
-import com.maldosia.cloudshuttle.core.protocol.CommonProtocolDefinition;
-import com.maldosia.cloudshuttle.core.protocol.ProtocolFieldEnum;
-import com.maldosia.cloudshuttle.core.protocol.ProtocolLengthField;
+import com.maldosia.cloudshuttle.core.protocol.*;
 import com.maldosia.cloudshuttle.core.util.ByteUtil;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
 
 import java.net.ProtocolException;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -18,10 +17,10 @@ import java.util.List;
  */
 public class FrameDelimiterDecoder extends ByteToMessageDecoder {
 
-    private final CommonProtocolDefinition protocolDefinition;
+    private final TcpProtocolDefinition protocolDefinition;
 
-    public FrameDelimiterDecoder(CommonProtocolDefinition commonProtocolDefinition) {
-        this.protocolDefinition = commonProtocolDefinition;
+    public FrameDelimiterDecoder(TcpProtocolDefinition tcpProtocolDefinition) {
+        this.protocolDefinition = tcpProtocolDefinition;
     }
     
     @Override
@@ -45,15 +44,16 @@ public class FrameDelimiterDecoder extends ByteToMessageDecoder {
         
     }
 
-    private Object decodeFrame(ByteBuf in) throws ProtocolException {
+    private Frame decodeFrame(ByteBuf in) throws ProtocolException {
+        List<byte[]> fieldValues = new ArrayList<byte[]>();
         // 确保有足够数据读取起始位
         if (in.readableBytes() < protocolDefinition.getStartFlagFieldLength()) {
             return null;
         }
-        
+
         // 标记当前位置
         in.markReaderIndex();
-        
+
         // 1.查找起始位
         if (!findStartFlag(in, protocolDefinition.getStartFlagField())) {
             return null;
@@ -66,31 +66,40 @@ public class FrameDelimiterDecoder extends ByteToMessageDecoder {
         }
 
         // 3. 读取协议头其他字段
+        byte[] functionCode = new byte[0];
         for (ProtocolField field : protocolDefinition.getAllFields()) {
-            if (field.getType() == ProtocolFieldEnum.START_FLAG) continue;
+            if (field.getType() == ProtocolFieldEnum.START_FLAG) {
+                ProtocolStartFlagField startFlagField = (ProtocolStartFlagField) field;
+                fieldValues.add(startFlagField.getStartFlag());
+                continue;
+            }
 
             byte[] value = new byte[field.getLength()];
             in.readBytes(value);
-            field.setValue(value);
-            
+            fieldValues.add(value);
+
             if (field.getType() == ProtocolFieldEnum.LENGTH) {
                 // 4. 验证长度有效性
-                if (isValidLength(in, field)) {
+                if (isValidLength(field, value, in)) {
                     in.resetReaderIndex();
                     throw new IllegalArgumentException("Invalid total length");
                 }
+            }
+
+            if (field.getType() == ProtocolFieldEnum.FUNCTION_CODE) {
+                functionCode = value;
             }
         }
 
         // 5.校验码
         // 6.结束标志
-        
-        return FrameFactory.createFrame(fields, delimiters, body);
+
+        return FrameFactory.createFrame(functionCode, fieldValues);
     }
-    
-    private boolean isValidLength(ByteBuf in, ProtocolField field) {
+
+    private boolean isValidLength(ProtocolField field, byte[] lengthBytes, ByteBuf in) {
         ProtocolLengthField protocolLengthField = (ProtocolLengthField) field;
-        int length = ByteUtil.toIntLittleEndian(protocolLengthField.getValue());
+        int length = ByteUtil.toIntLittleEndian(lengthBytes);
         if (protocolLengthField.getLengthFieldEnum() == ProtocolLengthField.ProtocolLengthFieldEnum.PROTOCOL_LENGTH) {
             //长度域代表整个帧长度
             int minLength = this.protocolDefinition.getAllFieldsLength();
@@ -104,14 +113,14 @@ public class FrameDelimiterDecoder extends ByteToMessageDecoder {
     }
 
     // 查找起始位并移动读指针
-    private boolean findStartFlag(ByteBuf in, ProtocolField startFlagField) {
+    private boolean findStartFlag(ByteBuf in, ProtocolStartFlagField startFlagField) {
         while (in.readableBytes() >= 4) {
             int startIndex = in.readerIndex();
 
             // 检查起始位
             boolean match = true;
             for (int i = 0; i < 4; i++) {
-                if (in.getByte(startIndex + i) != startFlagField.getValue()[i]) {
+                if (in.getByte(startIndex + i) != startFlagField.getStartFlag()[i]) {
                     match = false;
                     break;
                 }

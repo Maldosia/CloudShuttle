@@ -5,6 +5,7 @@ public enum ProtocolFieldEnum {
     START_FLAG,
     LENGTH,
     BODY,
+    FUNCTION_CODE,
     END_FLAG,
 
     HEADER,

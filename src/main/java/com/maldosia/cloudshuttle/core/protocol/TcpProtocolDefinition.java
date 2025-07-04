@@ -12,19 +12,19 @@ import java.util.List;
  * @author Maldosia
  * @since 2025/6/30
  */
-public class CommonProtocolDefinition implements ProtocolDefinition {
+public class TcpProtocolDefinition implements ProtocolDefinition {
 
-    private ProtocolField startFlag;
+    private ProtocolStartFlagField startFlag;
     private ProtocolField length;
     private ProtocolField body;
     private ProtocolField endFlag;
     private final List<ProtocolField> fieldList = new ArrayList<>();
 
-    public CommonProtocolDefinition(Builder builder) {
+    public TcpProtocolDefinition(Builder builder) {
         for (ProtocolField field : builder.fields) {
             fieldList.add(field);
             switch (field.getType()) {
-                case START_FLAG -> startFlag = field;
+                case START_FLAG -> startFlag = (ProtocolStartFlagField) field;
                 case END_FLAG -> endFlag = field;
                 case BODY -> body = field;
                 case LENGTH -> length = field;
@@ -40,7 +40,7 @@ public class CommonProtocolDefinition implements ProtocolDefinition {
         }
     }
 
-    public ProtocolField getStartFlagField() {
+    public ProtocolStartFlagField getStartFlagField() {
         return startFlag;
     }
     
@@ -72,7 +72,7 @@ public class CommonProtocolDefinition implements ProtocolDefinition {
         }
 
         public Builder addStartFlagField(byte[] startFlag) {
-            fields.add(new ProtocolField(startFlag, ProtocolFieldEnum.START_FLAG));
+            fields.add(new ProtocolStartFlagField(startFlag));
             return this;
         }
 
@@ -91,9 +91,9 @@ public class CommonProtocolDefinition implements ProtocolDefinition {
             return this;
         }
         
-        public CommonProtocolDefinition build() {
+        public TcpProtocolDefinition build() {
             if (fields.isEmpty()) throw new IllegalStateException("Field not set");
-            return new CommonProtocolDefinition(this);
+            return new TcpProtocolDefinition(this);
         }
     }
 

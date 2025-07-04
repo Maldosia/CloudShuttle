@@ -1,17 +1,18 @@
 package com.maldosia.cloudshuttle.core;
 
-import com.maldosia.cloudshuttle.core.protocol.CommonProtocolDefinition;
+import com.maldosia.cloudshuttle.core.protocol.TcpProtocolDefinition;
 
 public abstract class AbstractProtocol implements Protocol {
 
-    protected CommonProtocolDefinition commonProtocolDefinition;
+    protected TcpProtocolDefinition tcpProtocolDefinition;
 
-    public AbstractProtocol(CommonProtocolDefinition commonProtocolDefinition) {
-        this.commonProtocolDefinition = commonProtocolDefinition;
+    public AbstractProtocol(TcpProtocolDefinition tcpProtocolDefinition) {
+        this.tcpProtocolDefinition = tcpProtocolDefinition;
     }
 
     @Override
-    public void registerFrame(Message message) {
-        FrameFactory.registerFrame(message);
+    public void registerFrame(Frame frame) {
+        frame.setProtocolDefinition(tcpProtocolDefinition);
+        FrameFactory.registerFrame(frame);
     }
 }
