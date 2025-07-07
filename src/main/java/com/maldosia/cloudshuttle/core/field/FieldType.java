@@ -1,4 +1,4 @@
-package com.maldosia.cloudshuttle.core;
+package com.maldosia.cloudshuttle.core.field;
 
 /**
  * 字段类型枚举 - 定义协议中不同类型的字段

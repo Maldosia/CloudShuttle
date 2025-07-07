@@ -1,5 +1,14 @@
-package com.maldosia.cloudshuttle.core;
+package com.maldosia.cloudshuttle.core.codec;
 
+import com.maldosia.cloudshuttle.core.Bytes;
+import com.maldosia.cloudshuttle.core.ProtocolException;
+import com.maldosia.cloudshuttle.core.field.FieldDefinition;
+import com.maldosia.cloudshuttle.core.field.FieldType;
+import com.maldosia.cloudshuttle.core.message.FrameHeader;
+import com.maldosia.cloudshuttle.core.message.Message;
+import com.maldosia.cloudshuttle.core.message.MessageFactory;
+import com.maldosia.cloudshuttle.core.protocol.Protocol;
+import com.maldosia.cloudshuttle.core.protocol.ProtocolDefinition;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.channel.ChannelHandlerContext;
@@ -7,7 +16,6 @@ import io.netty.handler.codec.ByteToMessageDecoder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.net.ProtocolException;
 import java.util.List;
 
 /**
@@ -16,7 +24,7 @@ import java.util.List;
 public class ProtocolDecoder extends ByteToMessageDecoder {
     private static final Logger log = LoggerFactory.getLogger(ProtocolDecoder.class);
     private final Protocol protocol; // 协议处理器
-    private int minFrameLength;      // 最小帧长度
+    private final int minFrameLength;      // 最小帧长度
 
     /**
      * 构造函数
@@ -29,6 +37,7 @@ public class ProtocolDecoder extends ByteToMessageDecoder {
 
     @Override
     protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
+        ProtocolDefinition definition = protocol.getDefinition();
         // 检查是否有足够数据读取
         if (in.readableBytes() < minFrameLength) {
             return;
@@ -45,7 +54,7 @@ public class ProtocolDecoder extends ByteToMessageDecoder {
         boolean bodyFound = false;              // 是否找到报文体
 
         // 遍历所有字段进行解析
-        for (FieldDefinition field : protocol.getDefinition().getFields()) {
+        for (FieldDefinition field : definition.getFields()) {
             // 检查是否有足够数据读取当前字段
             if (in.readableBytes() < field.getLength()) {
                 in.resetReaderIndex();
@@ -56,7 +65,7 @@ public class ProtocolDecoder extends ByteToMessageDecoder {
             switch (field.getType()) {
                 case START_FLAG:
                     // 验证起始标志
-                    byte[] startBytes = ((FixedField) field).getFixedBytes();
+                    byte[] startBytes = field.getFixedBytes();
                     for (byte b : startBytes) {
                         if (in.readByte() != b) {
                             handleInvalidStart(ctx, in);
@@ -111,9 +120,9 @@ public class ProtocolDecoder extends ByteToMessageDecoder {
             ByteBuf bodyBuf = in.readRetainedSlice(bodyLength);
 
             // 处理结束标志
-            for (FieldDefinition field : protocol.getDefinition().getFields()) {
+            for (FieldDefinition field : definition.getFields()) {
                 if (field.getType() == FieldType.END_FLAG) {
-                    byte[] endBytes = ((FixedField) field).getFixedBytes();
+                    byte[] endBytes = field.getFixedBytes();
                     for (byte b : endBytes) {
                         if (in.readByte() != b) {
                             bodyBuf.release();
@@ -128,13 +137,12 @@ public class ProtocolDecoder extends ByteToMessageDecoder {
             if (functionCode == null) {
                 throw new ProtocolException("未找到功能码");
             }
-
-            // 创建消息对象
-            Message message = protocol.createMessage(functionCode);
-            if (message == null) {
-                throw new ProtocolException("未注册的功能码: " + bytesToHex(functionCode));
+            // 通过功能码查找消息工厂
+            MessageFactory factory = protocol.getFactory(functionCode);
+            if (factory == null) {
+                throw new ProtocolException("未注册的功能码: " + java.util.Arrays.toString(functionCode));
             }
-
+            Message message = factory.create();
             // 设置帧头并解析报文体
             message.setFrameHeader(header);
             message.deserialize(bodyBuf);
@@ -165,7 +173,7 @@ public class ProtocolDecoder extends ByteToMessageDecoder {
     private void handleInvalidStart(ChannelHandlerContext ctx, ByteBuf in) {
         in.resetReaderIndex();
         // 尝试寻找下一个起始标志
-        byte firstStartByte = ((FixedField) protocol.getDefinition().getFields().get(0)).getFixedBytes()[0];
+        byte firstStartByte = protocol.getDefinition().getFields().get(0).getFixedBytes()[0];
         while (in.readableBytes() > 0) {
             byte b = in.readByte();
             if (b == firstStartByte) {

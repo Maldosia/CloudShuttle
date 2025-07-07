@@ -1,4 +1,6 @@
-package com.maldosia.cloudshuttle.core;
+package com.maldosia.cloudshuttle.core.message;
+
+import com.maldosia.cloudshuttle.core.Bytes;
 
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;

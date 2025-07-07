@@ -1,4 +1,4 @@
-package com.maldosia.cloudshuttle.core;
+package com.maldosia.cloudshuttle.core.message;
 
 /**
  * 消息工厂接口 - 创建消息实例

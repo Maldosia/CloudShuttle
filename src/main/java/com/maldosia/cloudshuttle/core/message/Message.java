@@ -1,4 +1,4 @@
-package com.maldosia.cloudshuttle.core;
+package com.maldosia.cloudshuttle.core.message;
 
 import io.netty.buffer.ByteBuf;
 
