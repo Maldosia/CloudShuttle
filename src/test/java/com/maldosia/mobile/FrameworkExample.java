@@ -3,12 +3,16 @@ package com.maldosia.mobile;
 import com.maldosia.cloudshuttle.core.*;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * 示例使用代码
  */
 public class FrameworkExample {
     public static void main(String[] args) {
+        Logger logger = LoggerFactory.getLogger(FrameworkExample.class);
+
         // 1. 创建协议定义
         ProtocolDefinition protocolDef = ProtocolDefinition.builder()
                 .addStartFlag((byte) 0xAA, (byte) 0x55, (byte) 0x99, (byte) 0x66) // 起始标志
@@ -18,7 +22,7 @@ public class FrameworkExample {
                 .addLengthField(4)                               // 长度字段
                 .addHeaderField(12, "reserved", FieldType.HEADER) // 预留字段
                 .addBodyField()                                  // 报文体
-                .addEndFlag((byte) 0x66, (byte) 0x99, (byte) 0x55, (byte) 0xAA) // 结束标志
+//                .addEndFlag((byte) 0x66, (byte) 0x99, (byte) 0x55, (byte) 0xAA) // 结束标志
                 .build();
 
         // 2. 创建协议处理器
@@ -44,7 +48,8 @@ public class FrameworkExample {
 
             @Override
             public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-                System.err.println("处理消息时出错: " + cause.getMessage());
+                logger.error(cause.getMessage(), cause);
+//                System.err.println("处理消息时出错: " + cause.getMessage());
                 ctx.close();
             }
         });

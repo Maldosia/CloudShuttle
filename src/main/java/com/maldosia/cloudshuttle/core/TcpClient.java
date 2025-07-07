@@ -21,12 +21,19 @@ public class TcpClient extends AbstractTcpEndpoint {
     }
 
     @Override
+    protected void configureHandler(AbstractBootstrap<?, ?> bootstrap) {
+        Bootstrap b = (Bootstrap) bootstrap;
+        // 客户端使用 handler()
+        b.handler(createChannelInitializer());
+    }
+
+    @Override
     protected AbstractBootstrap<?, ?> createBootstrap() {
         return new Bootstrap();
     }
 
     @Override
-    protected void configureBootstrap(AbstractBootstrap<?, ?> bootstrap) {
+    protected void configureCommonOptions(AbstractBootstrap<?, ?> bootstrap) {
         Bootstrap b = (Bootstrap) bootstrap;
         b.channel(NioSocketChannel.class)
                 .option(ChannelOption.TCP_NODELAY, true)

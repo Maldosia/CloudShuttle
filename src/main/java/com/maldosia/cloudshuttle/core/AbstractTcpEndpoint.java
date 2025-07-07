@@ -45,15 +45,14 @@ public abstract class AbstractTcpEndpoint {
         group = new NioEventLoopGroup();
         try {
             AbstractBootstrap<?, ?> bootstrap = createBootstrap();
-            bootstrap.group(group)
-                    .handler(new ChannelInitializer<Channel>() {
-                        @Override
-                        protected void initChannel(Channel ch) {
-                            configurePipeline(ch.pipeline());
-                        }
-                    });
+            bootstrap.group(group);
 
-            configureBootstrap(bootstrap);
+            //配置公共选项
+            configureCommonOptions(bootstrap);
+
+            //配置特定类型的处理器
+            configureHandler(bootstrap);
+
             channel = doStart(bootstrap);
             System.out.println(getClass().getSimpleName() + " started successfully");
         } catch (Exception e) {
@@ -61,6 +60,13 @@ public abstract class AbstractTcpEndpoint {
             throw new RuntimeException("启动失败", e);
         }
     }
+
+    /**
+     * 配置处理器 - 由子类实现
+     *
+     * @param bootstrap 启动器
+     */
+    protected abstract void configureHandler(AbstractBootstrap<?, ?> bootstrap);
 
     /**
      * 关闭端点
@@ -75,6 +81,19 @@ public abstract class AbstractTcpEndpoint {
             group = null;
         }
         System.out.println(getClass().getSimpleName() + " stopped");
+    }
+
+    /**
+     * 创建通道初始化器
+     * @return 通道初始化器
+     */
+    protected ChannelInitializer<Channel> createChannelInitializer() {
+        return new ChannelInitializer<Channel>() {
+            @Override
+            protected void initChannel(Channel channel) throws Exception {
+                configurePipeline(channel.pipeline());
+            }
+        };
     }
 
     /**
@@ -95,6 +114,6 @@ public abstract class AbstractTcpEndpoint {
 
     // 抽象方法 - 由子类实现
     protected abstract AbstractBootstrap<?, ?> createBootstrap();
-    protected abstract void configureBootstrap(AbstractBootstrap<?, ?> bootstrap);
+    protected abstract void configureCommonOptions(AbstractBootstrap<?, ?> bootstrap);
     protected abstract Channel doStart(AbstractBootstrap<?, ?> bootstrap) throws Exception;
 }

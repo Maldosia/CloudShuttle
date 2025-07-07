@@ -59,7 +59,7 @@ public class ProtocolDefinition {
          * @return Builder实例
          */
         public Builder addHeaderField(int length, String name, FieldType type) {
-            definition.fields.add(new VariableField(length, name, type));
+            definition.fields.add(new FieldDefinition(length, name, type));
             return this;
         }
 
@@ -69,7 +69,7 @@ public class ProtocolDefinition {
          * @return Builder实例
          */
         public Builder addFunctionCodeField(int length) {
-            definition.fields.add(new VariableField(length, "FUNCTION_CODE", FieldType.FUNCTION_CODE));
+            definition.fields.add(new FieldDefinition(length, "FUNCTION_CODE", FieldType.FUNCTION_CODE));
             return this;
         }
 
@@ -79,7 +79,7 @@ public class ProtocolDefinition {
          * @return Builder实例
          */
         public Builder addLengthField(int length) {
-            definition.fields.add(new VariableField(length, "LENGTH", FieldType.LENGTH));
+            definition.fields.add(new FieldDefinition(length, "LENGTH", FieldType.LENGTH));
             return this;
         }
 
@@ -88,7 +88,7 @@ public class ProtocolDefinition {
          * @return Builder实例
          */
         public Builder addBodyField() {
-            definition.fields.add(new VariableField(0, "BODY", FieldType.BODY));
+            definition.fields.add(new FieldDefinition(0, "BODY", FieldType.BODY));
             return this;
         }
 
@@ -101,9 +101,7 @@ public class ProtocolDefinition {
          * @return Builder实例
          */
         public Builder addCustomField(int length, String name, FieldParser parser, FieldAssembler<?> assembler) {
-            VariableField field = new VariableField(length, name, FieldType.CUSTOM);
-            field.setParser(parser);
-            field.setAssembler(assembler);
+            FieldDefinition field = new FieldDefinition(length, name, FieldType.CUSTOM);
             definition.fields.add(field);
             return this;
         }

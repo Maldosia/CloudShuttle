@@ -1,8 +1,11 @@
 package com.maldosia.cloudshuttle.core;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufUtil;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.net.ProtocolException;
 import java.util.List;
@@ -11,6 +14,7 @@ import java.util.List;
  * 协议解码器 - 将字节流解码为消息对象
  */
 public class ProtocolDecoder extends ByteToMessageDecoder {
+    private static final Logger log = LoggerFactory.getLogger(ProtocolDecoder.class);
     private final Protocol protocol; // 协议处理器
     private int minFrameLength;      // 最小帧长度
 
@@ -29,6 +33,8 @@ public class ProtocolDecoder extends ByteToMessageDecoder {
         if (in.readableBytes() < minFrameLength) {
             return;
         }
+
+        log.info(ByteBufUtil.hexDump(in));
 
         // 标记当前读取位置
         in.markReaderIndex();
@@ -75,7 +81,7 @@ public class ProtocolDecoder extends ByteToMessageDecoder {
                     // 读取长度字段
                     byte[] lengthData = new byte[field.getLength()];
                     in.readBytes(lengthData);
-                    bodyLength = (Integer) field.parse(lengthData);
+                    bodyLength = Bytes.toInt(lengthData);
                     header.addField(field.getName(), lengthData);
                     break;
 
