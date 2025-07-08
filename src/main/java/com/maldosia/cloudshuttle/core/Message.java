@@ -3,35 +3,38 @@ package com.maldosia.cloudshuttle.core;
 import io.netty.buffer.ByteBuf;
 
 /**
- * 用户自定义消息接口
+ * 用户自定义消息接口，所有协议消息类必须实现。
+ * <p>
+ * 推荐实现 {@link #setFrameHeader(FrameHeader)} 和 {@link #getFrameHeader()} 以支持帧头操作。
+ * </p>
  */
 public interface Message {
     /**
-     * 设置帧头数据
+     * 设置帧头数据。
      * @param header 帧头对象
      */
     void setFrameHeader(FrameHeader header);
 
     /**
-     * 获取帧头数据
+     * 获取帧头数据。
      * @return 帧头对象
      */
     FrameHeader getFrameHeader();
 
     /**
-     * 反序列化方法 - 从ByteBuf中读取报文体数据
+     * 反序列化方法 - 从ByteBuf中读取报文体数据。
      * @param body 包含报文体数据的ByteBuf
      */
     void deserialize(ByteBuf body);
 
     /**
-     * 序列化方法 - 将消息写入ByteBuf
+     * 序列化方法 - 将消息写入ByteBuf。
      * @param buf 目标ByteBuf
      */
     void serialize(ByteBuf buf);
 
     /**
-     * 设置帧头字段（自动创建header）
+     * 设置帧头字段（自动创建header）。
      * @param name 字段名
      * @param value 字节值
      */
@@ -41,7 +44,7 @@ public interface Message {
     }
 
     /**
-     * 获取帧头字段
+     * 获取帧头字段。
      * @param name 字段名
      * @return 字节值
      */
@@ -50,7 +53,7 @@ public interface Message {
     }
 
     /**
-     * 获取帧头字段并转换为指定类型
+     * 获取帧头字段并转换为指定类型。
      * @param name 字段名
      * @param type 类型
      * @return 转换后的值

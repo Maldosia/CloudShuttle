@@ -1,133 +1,116 @@
 # CloudShuttle 云梭
 
-CloudShuttle是一个基于Netty框架的高性能、可扩展的网络通信框架，专为构建自定义协议的TCP服务器和客户端而设计。它提供了灵活的协议定义机制、高效的消息编解码功能以及简洁易用的API，帮助开发者快速构建可靠的网络通信系统。
+CloudShuttle 是一个基于 Netty 的高性能、声明式自定义 TCP 协议框架，专为工业、物联网、金融等场景下的协议快速集成与开发而设计。它支持灵活的协议结构声明、自动消息编解码、易用的 API 和完善的扩展机制，助力开发者高效构建可靠的 TCP 通信系统。
 
-## 功能特点
+---
 
-- **灵活的协议定义**：通过简洁的API定义自定义协议，支持起始标志、结束标志、头部字段、功能码、长度字段和报文体等元素。
-- **高性能通信**：基于Netty框架，充分利用其异步非阻塞特性，提供卓越的吞吐量和低延迟。
-- **可扩展的消息处理**：支持注册多种消息类型，并通过简单的接口处理不同类型的消息。
-- **完整的生命周期管理**：提供服务器和客户端的启动、关闭等完整生命周期管理功能。
-- **丰富的日志支持**：集成SLF4J日志门面，方便进行系统监控和问题排查。
+## 特性亮点
 
-## 技术架构
+- **声明式协议定义**：通过链式 DSL 或模板，快速声明自定义 TCP 协议结构（起始标志、功能码、长度、帧体、帧尾等）。
+- **自动消息编解码**：无需手写字节解析，支持多消息类型自动注册与分发。
+- **帧头灵活扩展**：支持自定义帧头字段（如版本、时间戳、流水号等），便于业务扩展。
+- **高性能与易用性兼备**：基于 Netty，API 简洁，易于集成到任意 Java 项目。
+- **完善的生命周期管理**：支持 TCP 服务端/客户端的启动、关闭、事件处理。
+- **开箱即用的测试用例**：集成 JUnit 测试，保障协议和消息收发的正确性。
 
-CloudShuttle基于Java语言开发，主要依赖以下技术栈：
+---
 
-- **Netty**：高性能网络编程框架
-- **SLF4J**：日志门面
-- **Logback**：日志实现
+## 快速开始
 
-## 安装使用
+### 1. 引入依赖
 
-### 引入依赖
-
-Maven用户可以在`pom.xml`中添加以下依赖：
+Maven:
+```xml
 <dependency>
-<groupId>io.github.yourusername</groupId>
-<artifactId>cloudshuttle</artifactId>
-<version>1.0.0</version>
+  <groupId>com.maldosia</groupId>
+  <artifactId>cloudshuttle</artifactId>
+  <version>1.0.0</version>
 </dependency>
-### 快速开始
+```
 
-下面是一个简单的示例，展示如何使用CloudShuttle构建一个简单的登录系统：
-
+### 2. 声明协议结构
 ```java
-public class QuickStartExample {
-    public static void main(String[] args) throws Exception {
-        // 定义协议
-        ProtocolDefinition protocolDef = ProtocolDefinition.builder()
-            .addStartFlag((byte) 0xAA, (byte) 0x55, (byte) 0x99, (byte) 0x66)
-            .addHeaderField(4, "checksum", FieldType.HEADER)
-            .addHeaderField(4, "version", FieldType.HEADER)
-            .addFunctionCodeField(4)
-            .addLengthField(4)
-            .addHeaderField(12, "reserved", FieldType.HEADER)
-            .addBodyField()
-            .build();
+ProtocolDefinition def = ProtocolDslBuilder.standard()
+    .addField("VERSION", FieldType.BYTE, 1)
+    .endFlag(0x16)
+    .description("带版本号的标准协议")
+    .build();
+Protocol protocol = new Protocol(def);
+```
 
-        // 创建协议处理器
-        Protocol protocol = new Protocol(protocolDef);
-        
-        // 注册消息类型
-        protocol.registerMessage(LoginCommand.class, LoginCommand::new);
-        protocol.registerMessage(LoginResponse.class, LoginResponse::new);
-
-        // 启动服务器
-        TcpServer server = new TcpServer(8080, protocol);
-        server.addHandler(new SimpleChannelInboundHandler<Message>() {
-            @Override
-            protected void channelRead0(ChannelHandlerContext ctx, Message msg) {
-                if (msg instanceof LoginCommand) {
-                    LoginCommand cmd = (LoginCommand) msg;
-                    System.out.println("收到登录请求 - 用户名: " + cmd.getUsername());
-                    
-                    // 处理登录逻辑...
-                    
-                    // 返回响应
-                    LoginResponse response = new LoginResponse();
-                    response.setSuccess(true);
-                    response.setMessage("登录成功");
-                    ctx.writeAndFlush(response);
-                }
-            }
-        });
-        server.startup();
-
-        // 启动客户端
-        TcpClient client = new TcpClient("localhost", 8080, protocol);
-        client.addHandler(new SimpleChannelInboundHandler<Message>() {
-            @Override
-            protected void channelRead0(ChannelHandlerContext ctx, Message msg) {
-                if (msg instanceof LoginResponse) {
-                    LoginResponse response = (LoginResponse) msg;
-                    System.out.println("登录结果: " + (response.isSuccess() ? "成功" : "失败"));
-                    System.out.println("消息: " + response.getMessage());
-                }
-            }
-        });
-        client.startup();
-
-        // 发送登录请求
-        LoginCommand loginCmd = new LoginCommand();
-        loginCmd.setUsername("admin");
-        loginCmd.setPassword("password");
-        client.channel.writeAndFlush(loginCmd);
-
-        // 优雅关闭
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            client.shutdown();
-            server.shutdown();
-        }));
+### 3. 定义消息类型
+```java
+@MessageType(code = {0x01})
+public class LoginRequest implements Message {
+    private String username;
+    private FrameHeader header;
+    // ...getter/setter...
+    @Override public void setFrameHeader(FrameHeader header) { this.header = header; }
+    @Override public FrameHeader getFrameHeader() { return header; }
+    @Override public void serialize(ByteBuf buf) { buf.writeBytes(username.getBytes()); }
+    @Override public void deserialize(ByteBuf buf) {
+        byte[] bytes = new byte[buf.readableBytes()];
+        buf.readBytes(bytes);
+        this.username = new String(bytes);
     }
 }
 ```
 
-## 文档
+### 4. 注册消息类型
+```java
+MessageAutoRegistrar.registerAll(protocol, "com.example.demo.message");
+```
 
-完整的文档可以在[Wiki页面](https://github.com/yourusername/cloudshuttle/wiki)找到，包括：
+### 5. 启动服务端/客户端
+```java
+TcpServer server = new TcpServer(9000, protocol);
+server.addHandler(new SimpleChannelInboundHandler<Message>() {
+    @Override
+    protected void channelRead0(ChannelHandlerContext ctx, Message msg) {
+        // 处理消息
+    }
+});
+server.startup();
 
-- [协议定义指南](https://github.com/yourusername/cloudshuttle/wiki/Protocol-Definition)
-- [消息处理机制](https://github.com/yourusername/cloudshuttle/wiki/Message-Handling)
-- [高级配置选项](https://github.com/yourusername/cloudshuttle/wiki/Advanced-Configuration)
-- [性能调优建议](https://github.com/yourusername/cloudshuttle/wiki/Performance-Tuning)
-- [API参考文档](https://github.com/yourusername/cloudshuttle/wiki/API-Reference)
+TcpClient client = new TcpClient("127.0.0.1", 9000, protocol);
+client.startup();
+```
 
-## 贡献
+---
 
-我们欢迎任何形式的贡献，无论是提交问题、提出建议还是提交代码。
+## 目录结构
 
-1. 请先在[Issue Tracker](https://github.com/yourusername/cloudshuttle/issues)中搜索是否已有相关问题或建议
-2. 提交问题时，请提供详细的重现步骤和环境信息
-3. 提交代码时，请遵循项目的代码风格和提交规范
-4. 所有贡献都需要通过Pull Request提交，并经过审核
+- `core/` 用户常用API（协议、消息、帧头、服务端/客户端等）
+- `core/codec/` 编解码器（内部实现）
+- `core/field/` 字段定义（内部实现）
+- `core/message/` 消息注解、工厂、自动注册工具（内部实现）
 
-## 许可证
+---
 
-CloudShuttle采用Apache License 2.0许可证，详情见[LICENSE](https://github.com/yourusername/cloudshuttle/blob/master/LICENSE)文件。
+## 贡献指南
 
-## 联系我们
+我们欢迎任何形式的贡献，包括但不限于：
+- 提交 Issue 或 Bug 报告
+- 提交 Pull Request
+- 优化文档、完善测试
 
-如果您有任何问题或建议，可以通过以下方式联系我们：
+请先阅读 [CONTRIBUTING.md](./CONTRIBUTING.md) 了解详细流程。
 
-- 提交[GitHub Issue](https://github.com/yourusername/cloudshuttle/issues)
+---
+
+## License
+
+CloudShuttle 遵循 Apache License 2.0 开源协议，详见 [LICENSE](./LICENSE)。
+
+---
+
+## 联系与支持
+
+- 提交 [GitHub Issue](https://github.com/maldosia/cloudshuttle/issues)
+- 邮箱：maldosiawl@gmail.com
+
+---
+
+## 致谢
+
+感谢所有贡献者和开源社区的支持！

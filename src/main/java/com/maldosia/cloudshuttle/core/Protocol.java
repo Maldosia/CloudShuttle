@@ -9,7 +9,11 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * 协议运行时实例，负责协议注册与消息分发
+ * 协议运行时实例，负责协议注册、消息分发与编解码。
+ * <p>
+ * 支持标准协议（自动内置编解码器）和自定义协议（需自定义编解码器）。
+ * 推荐通过 {@link ProtocolDslBuilder} 和 {@link ProtocolDefinition} 创建协议结构。
+ * </p>
  */
 public class Protocol {
     private final ProtocolDefinition definition;
@@ -23,7 +27,8 @@ public class Protocol {
     private final ProtocolDecoder decoder;
 
     /**
-     * 标准协议构造函数，自动使用内置Encoder/Decoder
+     * 标准协议构造函数，自动使用内置Encoder/Decoder。
+     * @param definition 协议结构定义
      */
     public Protocol(ProtocolDefinition definition) {
         this(definition,
@@ -33,7 +38,10 @@ public class Protocol {
     }
 
     /**
-     * 自定义协议构造函数，必须传入自定义Encoder/Decoder
+     * 自定义协议构造函数，必须传入自定义Encoder/Decoder。
+     * @param definition 协议结构定义
+     * @param encoder 协议编码器
+     * @param decoder 协议解码器
      */
     public Protocol(ProtocolDefinition definition, ProtocolEncoder encoder, ProtocolDecoder decoder) {
         this.definition = definition;
@@ -47,23 +55,29 @@ public class Protocol {
     }
 
     /**
-     * 获取协议定义
+     * 获取协议结构定义。
+     * @return 协议定义对象
      */
     public ProtocolDefinition getDefinition() {
         return definition;
     }
 
     /**
-     * 获取协议编码器
+     * 获取协议消息编码器（Netty集成用）。
+     * @return 编码器
      */
     public ProtocolEncoder getEncoder() { return encoder; }
     /**
-     * 获取协议解码器
+     * 获取协议消息解码器（Netty集成用）。
+     * @return 解码器
      */
     public ProtocolDecoder getDecoder() { return decoder; }
 
     /**
-     * 注册消息类型
+     * 注册消息类型与工厂。
+     * @param functionCode 功能码
+     * @param clazz 消息类
+     * @param factory 消息工厂
      */
     public void registerMessage(byte[] functionCode, Class<? extends Message> clazz, MessageFactory factory) {
         ByteArrayWrapper key = new ByteArrayWrapper(functionCode);
@@ -72,21 +86,27 @@ public class Protocol {
     }
 
     /**
-     * 根据功能码获取消息工厂
+     * 根据功能码获取消息工厂。
+     * @param functionCode 功能码
+     * @return 消息工厂
      */
     public MessageFactory getFactory(byte[] functionCode) {
         return messageFactories.get(new ByteArrayWrapper(functionCode));
     }
 
     /**
-     * 根据功能码获取消息类型
+     * 根据功能码获取消息类型。
+     * @param functionCode 功能码
+     * @return 消息类型Class
      */
     public Class<? extends Message> getMessageClass(byte[] functionCode) {
         return messageTypes.get(new ByteArrayWrapper(functionCode));
     }
 
     /**
-     * 通过消息类型反查功能码
+     * 通过消息类型反查功能码。
+     * @param clazz 消息类型Class
+     * @return 功能码字节数组
      */
     public byte[] getFunctionCodeByMessageClass(Class<? extends Message> clazz) {
         for (Map.Entry<ByteArrayWrapper, Class<? extends Message>> entry : messageTypes.entrySet()) {
@@ -98,7 +118,7 @@ public class Protocol {
     }
 
     /**
-     * byte[] 作为Map key的包装类，重写equals和hashCode
+     * byte[] 作为Map key的包装类，重写equals和hashCode。
      */
     private static class ByteArrayWrapper {
         private final byte[] data;
