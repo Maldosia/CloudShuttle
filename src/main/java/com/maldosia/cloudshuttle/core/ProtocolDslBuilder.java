@@ -1,12 +1,12 @@
-package com.maldosia.cloudshuttle.core.protocol;
+package com.maldosia.cloudshuttle.core;
 
 import com.maldosia.cloudshuttle.core.field.FieldDefinition;
-import com.maldosia.cloudshuttle.core.field.FieldType;
+
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 协议DSL构建器，支持标准协议和完全自定义协议两种模式。
+ * 协议声明式构建器
  */
 public class ProtocolDslBuilder {
     private final List<FieldDefinition> fields = new ArrayList<>();

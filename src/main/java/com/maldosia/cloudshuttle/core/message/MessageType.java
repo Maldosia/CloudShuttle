@@ -4,7 +4,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
 /**
- * 消息类型注解，用于将消息类与功能码绑定
+ * 消息类型注解，供自动注册和功能码绑定使用
  */
 @Retention(RetentionPolicy.RUNTIME)
 public @interface MessageType {

@@ -1,8 +1,9 @@
 package com.maldosia.cloudshuttle.core.field;
 
+import com.maldosia.cloudshuttle.core.FieldType;
+
 /**
- * 字段定义 - 用于描述协议中的字段结构
- * 只保留一个类，所有类型用 FieldType 区分
+ * 协议字段定义
  */
 public class FieldDefinition {
     private final String name;      // 字段名称

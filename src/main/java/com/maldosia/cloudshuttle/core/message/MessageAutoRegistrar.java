@@ -1,6 +1,7 @@
 package com.maldosia.cloudshuttle.core.message;
 
-import com.maldosia.cloudshuttle.core.protocol.Protocol;
+import com.maldosia.cloudshuttle.core.Message;
+import com.maldosia.cloudshuttle.core.Protocol;
 
 import java.io.IOException;
 import java.net.URL;
@@ -8,6 +9,9 @@ import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * 消息自动注册工具
+ */
 public class MessageAutoRegistrar {
     public static void registerAll(Protocol protocol, String basePackage) {
         Set<Class<?>> messageClasses = scanPackage(basePackage);

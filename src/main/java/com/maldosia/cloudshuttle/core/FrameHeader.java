@@ -1,13 +1,11 @@
-package com.maldosia.cloudshuttle.core.message;
-
-import com.maldosia.cloudshuttle.core.Bytes;
+package com.maldosia.cloudshuttle.core;
 
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
 /**
- * 帧头数据容器 - 存储和访问帧头字段
+ * 帧头数据容器
  */
 public class FrameHeader {
     private final Map<String, byte[]> fields = new HashMap<>();

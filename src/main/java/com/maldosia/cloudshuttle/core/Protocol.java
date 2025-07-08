@@ -1,15 +1,15 @@
-package com.maldosia.cloudshuttle.core.protocol;
+package com.maldosia.cloudshuttle.core;
 
 import com.maldosia.cloudshuttle.core.codec.ProtocolDecoder;
 import com.maldosia.cloudshuttle.core.codec.ProtocolEncoder;
-import com.maldosia.cloudshuttle.core.message.Message;
 import com.maldosia.cloudshuttle.core.message.MessageFactory;
+
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
 /**
- * 协议运行时实例，负责消息注册、查找、编解码等
+ * 协议运行时实例，负责协议注册与消息分发
  */
 public class Protocol {
     private final ProtocolDefinition definition;

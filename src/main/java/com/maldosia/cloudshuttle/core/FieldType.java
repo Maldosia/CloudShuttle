@@ -1,7 +1,7 @@
-package com.maldosia.cloudshuttle.core.field;
+package com.maldosia.cloudshuttle.core;
 
 /**
- * 字段类型枚举 - 定义协议中不同类型的字段
+ * 协议字段类型枚举
  */
 public enum FieldType {
     START_FLAG,         //起始标志字段

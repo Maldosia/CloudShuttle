@@ -1,12 +1,7 @@
 package com.maldosia.cloudshuttle.core.codec;
 
-import com.maldosia.cloudshuttle.core.Bytes;
+import com.maldosia.cloudshuttle.core.*;
 import com.maldosia.cloudshuttle.core.field.FieldDefinition;
-import com.maldosia.cloudshuttle.core.field.FieldType;
-import com.maldosia.cloudshuttle.core.message.FrameHeader;
-import com.maldosia.cloudshuttle.core.message.Message;
-import com.maldosia.cloudshuttle.core.protocol.Protocol;
-import com.maldosia.cloudshuttle.core.protocol.ProtocolDefinition;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.channel.ChannelHandlerContext;
@@ -17,8 +12,7 @@ import org.slf4j.LoggerFactory;
 import java.net.ProtocolException;
 
 /**
- * 协议编码器 - 将消息对象编码为字节流
- * 修复了长度字段计算问题
+ * 协议字节流编码器
  */
 public class ProtocolEncoder extends MessageToByteEncoder<Message> {
     private static final Logger log = LoggerFactory.getLogger(ProtocolEncoder.class);

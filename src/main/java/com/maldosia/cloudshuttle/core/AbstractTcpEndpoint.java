@@ -1,8 +1,7 @@
-package com.maldosia.cloudshuttle.core.internal;
+package com.maldosia.cloudshuttle.core;
 
 import com.maldosia.cloudshuttle.core.codec.ProtocolDecoder;
 import com.maldosia.cloudshuttle.core.codec.ProtocolEncoder;
-import com.maldosia.cloudshuttle.core.protocol.Protocol;
 import io.netty.bootstrap.AbstractBootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -11,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * TCP端点抽象类 - TCP服务端和客户端的基类
+ * TCP端点通用基类，仅供TcpClient/TcpServer继承
  */
 public abstract class AbstractTcpEndpoint {
     protected final String host;     // 主机地址

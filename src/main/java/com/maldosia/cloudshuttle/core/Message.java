@@ -1,10 +1,9 @@
-package com.maldosia.cloudshuttle.core.message;
+package com.maldosia.cloudshuttle.core;
 
 import io.netty.buffer.ByteBuf;
 
 /**
- * 消息接口 - 所有自定义消息必须实现的接口
- * 提供帧头便捷操作的默认实现
+ * 用户自定义消息接口
  */
 public interface Message {
     /**
