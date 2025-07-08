@@ -13,16 +13,22 @@ public class ProtocolDefinition {
     private final List<FieldDefinition> fields;
     private final String description;
     private final String protocolType;
+    private final boolean standard; // 是否标准协议
 
-    public ProtocolDefinition(List<FieldDefinition> fields, String description, String protocolType) {
+    public ProtocolDefinition(List<FieldDefinition> fields, String description, String protocolType, boolean standard) {
         this.fields = Collections.unmodifiableList(fields);
         this.description = description;
         this.protocolType = protocolType;
+        this.standard = standard;
     }
 
     public List<FieldDefinition> getFields() { return fields; }
     public String getDescription() { return description; }
     public String getProtocolType() { return protocolType; }
+    /**
+     * 是否为标准协议（包含起始标志、功能码、长度、帧体）
+     */
+    public boolean isStandard() { return standard; }
 
     /**
      * 链式构建器
@@ -32,6 +38,7 @@ public class ProtocolDefinition {
         private String description = "";
         private String protocolType = "TCP";
         private int order = 1;
+        private boolean standard = true;
 
         public Builder description(String desc) {
             this.description = desc;
@@ -49,8 +56,12 @@ public class ProtocolDefinition {
             fields.add(new FieldDefinition(name, type, fixedBytes.length, order++, fixedBytes));
             return this;
         }
+        public Builder standard(boolean standard) {
+            this.standard = standard;
+            return this;
+        }
         public ProtocolDefinition build() {
-            return new ProtocolDefinition(fields, description, protocolType);
+            return new ProtocolDefinition(fields, description, protocolType, standard);
         }
     }
 

@@ -1,12 +1,8 @@
 package com.maldosia.cloudshuttle.core.message;
 
 /**
- * 消息工厂接口 - 创建消息实例
+ * 消息工厂接口，供Protocol等内部注册消息工厂使用
  */
 public interface MessageFactory {
-    /**
-     * 创建消息实例
-     * @return 消息对象
-     */
     Message create();
-}
+} 

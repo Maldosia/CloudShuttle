@@ -1,4 +1,4 @@
-package com.maldosia.cloudshuttle.core;
+package com.maldosia.cloudshuttle.core.internal;
 
 import com.maldosia.cloudshuttle.core.codec.ProtocolDecoder;
 import com.maldosia.cloudshuttle.core.codec.ProtocolEncoder;

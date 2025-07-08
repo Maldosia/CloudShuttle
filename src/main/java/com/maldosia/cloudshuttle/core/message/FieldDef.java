@@ -1,11 +1,10 @@
 package com.maldosia.cloudshuttle.core.message;
-import java.lang.annotation.*;
 
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.FIELD)
-public @interface FieldDef {
-    int order();
-    int length(); // 0表示变长
-    boolean header() default false;
-    String name() default "";
+/**
+ * 字段定义（可能为遗留或内部使用）
+ */
+public class FieldDef {
+    // 示例字段
+    public String name;
+    public int length;
 } 

@@ -67,16 +67,9 @@ public class TcpDualMessageIntegrationTest {
         public int getNumber() { return number; }
         public void setNumber(int number) { this.number = number; }
         @Override
-        public void setFrameHeader(FrameHeader header) {
-            this.header = header;
-            // 如需同步帧头字段，可在此处添加
-        }
+        public void setFrameHeader(FrameHeader header) { this.header = header; }
         @Override
-        public FrameHeader getFrameHeader() {
-            if (header == null) header = new FrameHeader();
-            // 如需同步帧头字段，可在此处添加
-            return header;
-        }
+        public FrameHeader getFrameHeader() { return header; }
         @Override
         public void deserialize(ByteBuf body) {
             this.number = body.readInt();
@@ -89,18 +82,12 @@ public class TcpDualMessageIntegrationTest {
 
     private Protocol buildProtocol() {
         // 推荐链式DSL风格
-        ProtocolDefinition def = ProtocolDslBuilder.create()
-            .startFlag(0x68)
+        ProtocolDefinition def = ProtocolDslBuilder.standard()
             .addField("VERSION", FieldType.CUSTOM, 1)
-            .functionCode(1)
-            .length(2)
-            .body()
             .endFlag(0x16)
             .description("双消息协议-带version")
             .protocolType("TCP")
             .build();
-        // 也可以直接用模板：
-        // ProtocolDefinition def = ProtocolTemplates.simpleTcp();
         Protocol protocol = new Protocol(def);
         MessageAutoRegistrar.registerAll(protocol, this.getClass().getPackage().getName());
         return protocol;
@@ -156,9 +143,8 @@ public class TcpDualMessageIntegrationTest {
     public void testDualMessageExchange() throws Exception {
         // client 先发A
         MessageA messageA = new MessageA("hello-server");
-        FrameHeader header = new FrameHeader();
-        header.addField("VERSION", new byte[]{2}); // 设置帧头version字段
-        messageA.setFrameHeader(header);
+        // 便捷设置帧头字段
+        messageA.setHeaderField("VERSION", new byte[]{2});
         client.channel.writeAndFlush(messageA);
         // 等待收到B
         boolean ok = latch.await(10, TimeUnit.SECONDS);

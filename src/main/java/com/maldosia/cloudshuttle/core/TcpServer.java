@@ -1,6 +1,7 @@
 package com.maldosia.cloudshuttle.core;
 
 
+import com.maldosia.cloudshuttle.core.internal.AbstractTcpEndpoint;
 import com.maldosia.cloudshuttle.core.protocol.Protocol;
 import io.netty.bootstrap.AbstractBootstrap;
 import io.netty.bootstrap.ServerBootstrap;

@@ -1,8 +1,12 @@
 package com.maldosia.cloudshuttle.core.message;
-import java.lang.annotation.*;
 
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+
+/**
+ * 消息类型注解，用于将消息类与功能码绑定
+ */
 @Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.TYPE)
 public @interface MessageType {
     byte[] code();
 } 

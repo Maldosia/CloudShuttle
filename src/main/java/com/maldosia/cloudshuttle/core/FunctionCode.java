@@ -1,12 +1,10 @@
 package com.maldosia.cloudshuttle.core;
 
 /**
- * 功能码接口 - 为消息提供功能码
+ * 功能码常量定义（如有需要可扩展）
  */
-public interface FunctionCode {
-    /**
-     * 获取消息的功能码
-     * @return 功能码字节数组
-     */
-    byte[] getCode();
-}
+public class FunctionCode {
+    // 示例功能码
+    public static final byte LOGIN = 0x01;
+    public static final byte HEARTBEAT = 0x02;
+} 

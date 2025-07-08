@@ -4,6 +4,7 @@ import io.netty.buffer.ByteBuf;
 
 /**
  * 消息接口 - 所有自定义消息必须实现的接口
+ * 提供帧头便捷操作的默认实现
  */
 public interface Message {
     /**
@@ -29,4 +30,33 @@ public interface Message {
      * @param buf 目标ByteBuf
      */
     void serialize(ByteBuf buf);
+
+    /**
+     * 设置帧头字段（自动创建header）
+     * @param name 字段名
+     * @param value 字节值
+     */
+    default void setHeaderField(String name, byte[] value) {
+        if (getFrameHeader() == null) setFrameHeader(new FrameHeader());
+        getFrameHeader().addField(name, value);
+    }
+
+    /**
+     * 获取帧头字段
+     * @param name 字段名
+     * @return 字节值
+     */
+    default byte[] getHeaderField(String name) {
+        return getFrameHeader() != null ? getFrameHeader().getField(name) : null;
+    }
+
+    /**
+     * 获取帧头字段并转换为指定类型
+     * @param name 字段名
+     * @param type 类型
+     * @return 转换后的值
+     */
+    default <T> T getHeaderFieldAs(String name, Class<T> type) {
+        return getFrameHeader() != null ? getFrameHeader().getFieldAs(name, type) : null;
+    }
 }

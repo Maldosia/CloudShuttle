@@ -1,5 +1,7 @@
 package com.maldosia.cloudshuttle.core.protocol;
 
+import com.maldosia.cloudshuttle.core.codec.ProtocolDecoder;
+import com.maldosia.cloudshuttle.core.codec.ProtocolEncoder;
 import com.maldosia.cloudshuttle.core.message.Message;
 import com.maldosia.cloudshuttle.core.message.MessageFactory;
 import java.util.Arrays;
@@ -16,21 +18,49 @@ public class Protocol {
     // functionCode(byte[]) -> 消息类型
     private final Map<ByteArrayWrapper, Class<? extends Message>> messageTypes = new HashMap<>();
 
+    // 编解码器
+    private final ProtocolEncoder encoder;
+    private final ProtocolDecoder decoder;
+
     /**
-     * 构造函数
-     * @param definition 协议定义
+     * 标准协议构造函数，自动使用内置Encoder/Decoder
      */
     public Protocol(ProtocolDefinition definition) {
+        this(definition,
+            definition.isStandard() ? new com.maldosia.cloudshuttle.core.codec.ProtocolEncoder(null) : null,
+            definition.isStandard() ? new com.maldosia.cloudshuttle.core.codec.ProtocolDecoder(null) : null
+        );
+    }
+
+    /**
+     * 自定义协议构造函数，必须传入自定义Encoder/Decoder
+     */
+    public Protocol(ProtocolDefinition definition, ProtocolEncoder encoder, ProtocolDecoder decoder) {
         this.definition = definition;
+        if (!definition.isStandard()) {
+            if (encoder == null || decoder == null) {
+                throw new IllegalArgumentException("自定义协议必须传入自定义Encoder和Decoder");
+            }
+        }
+        this.encoder = encoder;
+        this.decoder = decoder;
     }
 
     /**
      * 获取协议定义
-     * @return 协议定义
      */
     public ProtocolDefinition getDefinition() {
         return definition;
     }
+
+    /**
+     * 获取协议编码器
+     */
+    public ProtocolEncoder getEncoder() { return encoder; }
+    /**
+     * 获取协议解码器
+     */
+    public ProtocolDecoder getDecoder() { return decoder; }
 
     /**
      * 注册消息类型

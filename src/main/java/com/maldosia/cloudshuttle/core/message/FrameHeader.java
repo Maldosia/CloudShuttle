@@ -13,12 +13,14 @@ public class FrameHeader {
     private final Map<String, byte[]> fields = new HashMap<>();
 
     /**
-     * 添加字段数据
+     * 添加字段数据（链式API）
      * @param name 字段名称
      * @param data 字段值（字节数组）
+     * @return this，便于链式调用
      */
-    public void addField(String name, byte[] data) {
+    public FrameHeader addField(String name, byte[] data) {
         fields.put(name, data);
+        return this;
     }
 
     /**

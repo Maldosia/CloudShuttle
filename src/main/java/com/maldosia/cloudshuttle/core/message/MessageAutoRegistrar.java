@@ -1,8 +1,8 @@
 package com.maldosia.cloudshuttle.core.message;
 
 import com.maldosia.cloudshuttle.core.protocol.Protocol;
+
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
 import java.util.Enumeration;
 import java.util.HashSet;
