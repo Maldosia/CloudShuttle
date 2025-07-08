@@ -6,4 +6,6 @@ import java.lang.annotation.*;
 public @interface FieldDef {
     int order();
     int length(); // 0表示变长
+    boolean header() default false;
+    String name() default "";
 } 

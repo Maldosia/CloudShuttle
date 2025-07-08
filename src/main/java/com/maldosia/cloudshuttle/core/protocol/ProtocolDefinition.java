@@ -14,7 +14,7 @@ public class ProtocolDefinition {
     private final String description;
     private final String protocolType;
 
-    private ProtocolDefinition(List<FieldDefinition> fields, String description, String protocolType) {
+    public ProtocolDefinition(List<FieldDefinition> fields, String description, String protocolType) {
         this.fields = Collections.unmodifiableList(fields);
         this.description = description;
         this.protocolType = protocolType;

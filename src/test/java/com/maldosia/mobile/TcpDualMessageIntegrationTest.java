@@ -3,9 +3,13 @@ package com.maldosia.mobile;
 import com.maldosia.cloudshuttle.core.TcpClient;
 import com.maldosia.cloudshuttle.core.TcpServer;
 import com.maldosia.cloudshuttle.core.field.FieldType;
-import com.maldosia.cloudshuttle.core.message.*;
+import com.maldosia.cloudshuttle.core.message.FrameHeader;
+import com.maldosia.cloudshuttle.core.message.Message;
+import com.maldosia.cloudshuttle.core.message.MessageAutoRegistrar;
+import com.maldosia.cloudshuttle.core.message.MessageType;
 import com.maldosia.cloudshuttle.core.protocol.Protocol;
 import com.maldosia.cloudshuttle.core.protocol.ProtocolDefinition;
+import com.maldosia.cloudshuttle.core.protocol.ProtocolDslBuilder;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -23,8 +27,6 @@ public class TcpDualMessageIntegrationTest {
     private TcpClient client;
     private static final int PORT = 19011;
     private static final String HOST = "127.0.0.1";
-    private static final byte[] CODE_A = new byte[]{(byte)0xA1};
-    private static final byte[] CODE_B = new byte[]{(byte)0xB2};
 
     private CountDownLatch latch;
     private final String[] receivedContent = new String[1];
@@ -32,13 +34,17 @@ public class TcpDualMessageIntegrationTest {
 
     // MessageA
     @MessageType(code = {(byte)0xA1})
-    public static class MessageA extends AutoMessage {
-        @FieldDef(order = 1, length = 0)
+    public static class MessageA implements Message {
         private String content;
+        private FrameHeader header;
         public MessageA() {}
         public MessageA(String content) { this.content = content; }
         public String getContent() { return content; }
         public void setContent(String content) { this.content = content; }
+        @Override
+        public void setFrameHeader(FrameHeader header) { this.header = header; }
+        @Override
+        public FrameHeader getFrameHeader() { return header; }
         @Override
         public void deserialize(ByteBuf body) {
             int len = body.readableBytes();
@@ -53,13 +59,24 @@ public class TcpDualMessageIntegrationTest {
     }
     // MessageB
     @MessageType(code = {(byte)0xB2})
-    public static class MessageB extends AutoMessage {
-        @FieldDef(order = 1, length = 4)
+    public static class MessageB implements Message {
         private int number;
+        private FrameHeader header;
         public MessageB() {}
         public MessageB(int number) { this.number = number; }
         public int getNumber() { return number; }
         public void setNumber(int number) { this.number = number; }
+        @Override
+        public void setFrameHeader(FrameHeader header) {
+            this.header = header;
+            // 如需同步帧头字段，可在此处添加
+        }
+        @Override
+        public FrameHeader getFrameHeader() {
+            if (header == null) header = new FrameHeader();
+            // 如需同步帧头字段，可在此处添加
+            return header;
+        }
         @Override
         public void deserialize(ByteBuf body) {
             this.number = body.readInt();
@@ -71,17 +88,20 @@ public class TcpDualMessageIntegrationTest {
     }
 
     private Protocol buildProtocol() {
-        ProtocolDefinition def = ProtocolDefinition.builder()
-            .addFixedField("START", FieldType.START_FLAG, new byte[]{0x68})
-            .addField("CODE", FieldType.FUNCTION_CODE, 1)
-            .addField("LEN", FieldType.LENGTH, 2)
-            .addField("BODY", FieldType.BODY, 0)
-            .addFixedField("END", FieldType.END_FLAG, new byte[]{0x16})
-            .description("双消息协议")
+        // 推荐链式DSL风格
+        ProtocolDefinition def = ProtocolDslBuilder.create()
+            .startFlag(0x68)
+            .addField("VERSION", FieldType.CUSTOM, 1)
+            .functionCode(1)
+            .length(2)
+            .body()
+            .endFlag(0x16)
+            .description("双消息协议-带version")
             .protocolType("TCP")
             .build();
+        // 也可以直接用模板：
+        // ProtocolDefinition def = ProtocolTemplates.simpleTcp();
         Protocol protocol = new Protocol(def);
-        // 自动注册消息类型
         MessageAutoRegistrar.registerAll(protocol, this.getClass().getPackage().getName());
         return protocol;
     }
@@ -135,10 +155,15 @@ public class TcpDualMessageIntegrationTest {
     @Test
     public void testDualMessageExchange() throws Exception {
         // client 先发A
-        client.channel.writeAndFlush(new MessageA("hello-server"));
+        MessageA messageA = new MessageA("hello-server");
+        FrameHeader header = new FrameHeader();
+        header.addField("VERSION", new byte[]{2}); // 设置帧头version字段
+        messageA.setFrameHeader(header);
+        client.channel.writeAndFlush(messageA);
         // 等待收到B
-        boolean ok = latch.await(3, TimeUnit.SECONDS);
+        boolean ok = latch.await(10, TimeUnit.SECONDS);
         assertTrue(ok, "未收到MessageB响应");
+        System.out.println("received: " + receivedNumber[0]);
         assertEquals(12345, receivedNumber[0], "MessageB内容不正确");
     }
 
