@@ -3,8 +3,7 @@ package com.maldosia.mobile;
 import com.maldosia.cloudshuttle.core.TcpClient;
 import com.maldosia.cloudshuttle.core.TcpServer;
 import com.maldosia.cloudshuttle.core.field.FieldType;
-import com.maldosia.cloudshuttle.core.message.FrameHeader;
-import com.maldosia.cloudshuttle.core.message.Message;
+import com.maldosia.cloudshuttle.core.message.*;
 import com.maldosia.cloudshuttle.core.protocol.Protocol;
 import com.maldosia.cloudshuttle.core.protocol.ProtocolDefinition;
 import io.netty.buffer.ByteBuf;
@@ -32,39 +31,43 @@ public class TcpDualMessageIntegrationTest {
     private final int[] receivedNumber = new int[1];
 
     // MessageA
-    public static class MessageA implements Message {
+    @MessageType(code = {(byte)0xA1})
+    public static class MessageA extends AutoMessage {
+        @FieldDef(order = 1, length = 0)
         private String content;
-        private FrameHeader header;
         public MessageA() {}
         public MessageA(String content) { this.content = content; }
-        @Override public void setFrameHeader(FrameHeader header) { this.header = header; }
-        @Override public FrameHeader getFrameHeader() { return header; }
-        @Override public void deserialize(ByteBuf body) {
+        public String getContent() { return content; }
+        public void setContent(String content) { this.content = content; }
+        @Override
+        public void deserialize(ByteBuf body) {
             int len = body.readableBytes();
             byte[] bytes = new byte[len];
             body.readBytes(bytes);
             this.content = new String(bytes);
         }
-        @Override public void serialize(ByteBuf buf) {
+        @Override
+        public void serialize(ByteBuf buf) {
             buf.writeBytes(content.getBytes());
         }
-        public String getContent() { return content; }
     }
     // MessageB
-    public static class MessageB implements Message {
+    @MessageType(code = {(byte)0xB2})
+    public static class MessageB extends AutoMessage {
+        @FieldDef(order = 1, length = 4)
         private int number;
-        private FrameHeader header;
         public MessageB() {}
         public MessageB(int number) { this.number = number; }
-        @Override public void setFrameHeader(FrameHeader header) { this.header = header; }
-        @Override public FrameHeader getFrameHeader() { return header; }
-        @Override public void deserialize(ByteBuf body) {
+        public int getNumber() { return number; }
+        public void setNumber(int number) { this.number = number; }
+        @Override
+        public void deserialize(ByteBuf body) {
             this.number = body.readInt();
         }
-        @Override public void serialize(ByteBuf buf) {
+        @Override
+        public void serialize(ByteBuf buf) {
             buf.writeInt(number);
         }
-        public int getNumber() { return number; }
     }
 
     private Protocol buildProtocol() {
@@ -78,8 +81,8 @@ public class TcpDualMessageIntegrationTest {
             .protocolType("TCP")
             .build();
         Protocol protocol = new Protocol(def);
-        protocol.registerMessage(CODE_A, MessageA.class, MessageA::new);
-        protocol.registerMessage(CODE_B, MessageB.class, MessageB::new);
+        // 自动注册消息类型
+        MessageAutoRegistrar.registerAll(protocol, this.getClass().getPackage().getName());
         return protocol;
     }
 
