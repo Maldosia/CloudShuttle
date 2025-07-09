@@ -6,7 +6,7 @@
     <parent>
         <groupId>com.maldosia</groupId>
         <artifactId>cloudshuttle</artifactId>
-        <version>1.0-SNAPSHOT</version>
+        <version>1.3.0</version>
     </parent>
 
     <artifactId>cloudshuttle-example</artifactId>
@@ -21,7 +21,7 @@
         <dependency>
             <groupId>com.maldosia</groupId>
             <artifactId>cloudshuttle-core</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <version>1.3.0</version>
         </dependency>
 
         <dependency>
