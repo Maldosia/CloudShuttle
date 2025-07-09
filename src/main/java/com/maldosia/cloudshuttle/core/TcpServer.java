@@ -9,12 +9,15 @@ import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * TCP服务端实现
  */
 public class TcpServer extends AbstractTcpEndpoint {
 
+    private static final Logger log = LoggerFactory.getLogger(TcpServer.class);
     private final EventLoopGroup bossGroup;
 
     /**
@@ -61,10 +64,10 @@ public class TcpServer extends AbstractTcpEndpoint {
             configureHandler(b);
 
             channel = doStart(b);
-            System.out.println("TCP Server started on port " + port);
+            log.info("TCP Server started on port {}", port);
         } catch (Exception e) {
             shutdown();
-            throw new RuntimeException("Server startup failed", e);
+            throw new TransportException("Server startup failed: " + e.getMessage(), e);
         }
     }
 
@@ -74,7 +77,7 @@ public class TcpServer extends AbstractTcpEndpoint {
         if (bossGroup != null) {
             bossGroup.shutdownGracefully();
         }
-        System.out.println("TCP Server stopped");
+        log.info("TCP Server stopped");
     }
 
     @Override

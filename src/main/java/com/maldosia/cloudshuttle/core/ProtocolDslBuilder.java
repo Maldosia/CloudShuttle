@@ -101,6 +101,20 @@ public class ProtocolDslBuilder {
      * @return 构建器
      */
     public ProtocolDslBuilder addField(String name, FieldType type, int length) {
+        if (name == null || name.isEmpty()) {
+            throw new ProtocolException("字段名不能为空");
+        }
+        if (length < 0) {
+            throw new ProtocolException("字段长度不能为负: " + name);
+        }
+        // 字段名重复警告（允许但建议提示）
+        for (FieldDefinition f : fields) {
+            if (f.getName().equals(name)) {
+                // 允许重复，但建议日志警告
+                // System.err.println("警告: 字段名重复: " + name);
+                break;
+            }
+        }
         fields.add(new FieldDefinition(name, type, length, order++));
         return this;
     }
@@ -137,7 +151,7 @@ public class ProtocolDslBuilder {
                 if (f.getType() == FieldType.BODY) hasBody = true;
             }
             if (!(hasStart && hasCode && hasLen && hasBody)) {
-                throw new IllegalStateException("标准协议必须包含起始标志、功能码、长度、帧体字段");
+                throw new ProtocolException("标准协议必须包含起始标志、功能码、长度、帧体字段");
             }
         }
         return new ProtocolDefinition(fields, description, protocolType, standard);

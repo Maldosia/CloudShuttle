@@ -8,11 +8,14 @@ import io.netty.channel.nio.NioEventLoopGroup;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * TCP端点通用基类，仅供TcpClient/TcpServer继承
  */
 public abstract class AbstractTcpEndpoint {
+    private static final Logger log = LoggerFactory.getLogger(AbstractTcpEndpoint.class);
     protected final String host;     // 主机地址
     protected final int port;        // 端口号
     protected final Protocol protocol; // 协议处理器
@@ -56,10 +59,10 @@ public abstract class AbstractTcpEndpoint {
             configureHandler(bootstrap);
 
             channel = doStart(bootstrap);
-            System.out.println(getClass().getSimpleName() + " started successfully");
+            log.info("{} started successfully", getClass().getSimpleName());
         } catch (Exception e) {
             shutdown();
-            throw new RuntimeException("启动失败", e);
+            throw new TransportException(getClass().getSimpleName() + " 启动失败: " + e.getMessage(), e);
         }
     }
 
@@ -82,7 +85,7 @@ public abstract class AbstractTcpEndpoint {
             group.shutdownGracefully();
             group = null;
         }
-        System.out.println(getClass().getSimpleName() + " stopped");
+        log.info("{} stopped", getClass().getSimpleName());
     }
 
     /**

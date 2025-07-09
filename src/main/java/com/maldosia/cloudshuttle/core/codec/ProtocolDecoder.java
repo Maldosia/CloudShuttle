@@ -33,7 +33,7 @@ public class ProtocolDecoder extends ByteToMessageDecoder {
     @Override
     protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
         if (protocol == null) {
-            throw new IllegalStateException("标准协议必须传入Protocol实例，自定义协议请实现自定义Decoder");
+            throw new CodecException("标准协议必须传入Protocol实例，自定义协议请实现自定义Decoder");
         }
         ProtocolDefinition definition = protocol.getDefinition();
         if (in.readableBytes() < minFrameLength) {
@@ -96,18 +96,18 @@ public class ProtocolDecoder extends ByteToMessageDecoder {
                     for (byte b : endBytes) {
                         if (in.readByte() != b) {
                             bodyBuf.release();
-                            throw new ProtocolException("无效的结束标志");
+                            throw new CodecException("无效的结束标志");
                         }
                     }
                     break;
                 }
             }
             if (functionCode == null) {
-                throw new ProtocolException("未找到功能码");
+                throw new CodecException("未找到功能码");
             }
             MessageFactory factory = protocol.getFactory(functionCode);
             if (factory == null) {
-                throw new ProtocolException("未注册的功能码: " + java.util.Arrays.toString(functionCode));
+                throw new CodecException("未注册的功能码: " + java.util.Arrays.toString(functionCode));
             }
             Message message = factory.create();
             message.setFrameHeader(header);

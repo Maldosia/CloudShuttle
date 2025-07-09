@@ -6,11 +6,14 @@ import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * TCP客户端实现
  */
 public class TcpClient extends AbstractTcpEndpoint {
+    private static final Logger log = LoggerFactory.getLogger(TcpClient.class);
     /**
      * 构造函数
      * @param host 主机地址

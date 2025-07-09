@@ -6,12 +6,16 @@ import com.maldosia.cloudshuttle.core.message.MessageAutoRegistrar;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * CloudShuttle 快速上手示例
  * 展示如何声明协议、定义消息、注册消息类型、启动服务端/客户端并收发消息。
  */
 public class QuickStartExample {
+    private static final Logger log = LoggerFactory.getLogger(QuickStartExample.class);
+
     public static void main(String[] args) throws Exception {
         // 1. 声明协议结构
         ProtocolDefinition def = ProtocolDslBuilder.standard()
@@ -31,7 +35,7 @@ public class QuickStartExample {
             protected void channelRead0(ChannelHandlerContext ctx, Message msg) {
                 if (msg instanceof LoginRequest) {
                     LoginRequest req = (LoginRequest) msg;
-                    System.out.println("服务端收到登录请求: " + req.getUsername());
+                    log.info("服务端收到登录请求: {}", req.getUsername());
                     LoginResponse resp = new LoginResponse();
                     resp.setSuccess(true);
                     resp.setMessage("登录成功");
@@ -48,7 +52,7 @@ public class QuickStartExample {
             protected void channelRead0(ChannelHandlerContext ctx, Message msg) {
                 if (msg instanceof LoginResponse) {
                     LoginResponse resp = (LoginResponse) msg;
-                    System.out.println("客户端收到登录响应: " + resp.getMessage());
+                    log.info("客户端收到登录响应: {}", resp.getMessage());
                 }
             }
         });

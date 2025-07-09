@@ -2,6 +2,7 @@ package com.maldosia.cloudshuttle.core.message;
 
 import com.maldosia.cloudshuttle.core.Message;
 import com.maldosia.cloudshuttle.core.Protocol;
+import com.maldosia.cloudshuttle.core.MessageException;
 
 import java.io.IOException;
 import java.net.URL;
@@ -14,6 +15,12 @@ import java.util.Set;
  */
 public class MessageAutoRegistrar {
     public static void registerAll(Protocol protocol, String basePackage) {
+        if (protocol == null) {
+            throw new MessageException("Protocol 不能为空");
+        }
+        if (basePackage == null || basePackage.isEmpty()) {
+            throw new MessageException("包名不能为空");
+        }
         Set<Class<?>> messageClasses = scanPackage(basePackage);
         for (Class<?> clazz : messageClasses) {
             if (clazz.isAnnotationPresent(MessageType.class) && Message.class.isAssignableFrom(clazz)) {
@@ -23,11 +30,11 @@ public class MessageAutoRegistrar {
                         try {
                             return (Message) clazz.getDeclaredConstructor().newInstance();
                         } catch (Exception e) {
-                            throw new RuntimeException("自动实例化消息失败: " + clazz.getName(), e);
+                            throw new MessageException("自动实例化消息失败: " + clazz.getName(), e);
                         }
                     });
                 } catch (Exception e) {
-                    throw new RuntimeException("自动注册消息失败: " + clazz.getName(), e);
+                    throw new MessageException("自动注册消息失败: " + clazz.getName(), e);
                 }
             }
         }

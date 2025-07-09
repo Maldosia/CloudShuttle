@@ -28,7 +28,7 @@ public class ProtocolEncoder extends MessageToByteEncoder<Message> {
         // 通过消息类型反查功能码（假设功能码为1字节，遍历 codeToClass）
         byte[] functionCode = protocol.getFunctionCodeByMessageClass(msg.getClass());
         if (functionCode == null) {
-            throw new IllegalArgumentException("未注册的消息类型: " + msg.getClass().getName());
+            throw new CodecException("未注册的消息类型: " + msg.getClass().getName());
         }
 
         // 获取或创建帧头
@@ -73,7 +73,7 @@ public class ProtocolEncoder extends MessageToByteEncoder<Message> {
 
                     // 验证字段长度
                     if (fieldData.length != field.getLength()) {
-                        throw new ProtocolException("字段长度不匹配: " + fieldName +
+                        throw new CodecException("字段长度不匹配: " + fieldName +
                                 ", 预期: " + field.getLength() + ", 实际: " + fieldData.length);
                     }
 
