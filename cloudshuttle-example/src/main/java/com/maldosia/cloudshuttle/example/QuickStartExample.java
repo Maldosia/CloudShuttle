@@ -1,8 +1,8 @@
 package com.maldosia.cloudshuttle.example;
 
 import com.maldosia.cloudshuttle.core.*;
-import com.maldosia.cloudshuttle.core.message.MessageType;
 import com.maldosia.cloudshuttle.core.message.MessageAutoRegistrar;
+import com.maldosia.cloudshuttle.core.message.MessageType;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -120,4 +120,4 @@ public class QuickStartExample {
             this.message = new String(bytes);
         }
     }
-} 
+}
